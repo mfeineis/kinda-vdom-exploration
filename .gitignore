@@ -1,3 +1,9 @@
+coverage/
+cypress/integration/examples/
+dist/
+private/
+reports/
+
 # Logs
 logs
 *.log
