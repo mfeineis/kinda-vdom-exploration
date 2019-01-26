@@ -9,6 +9,7 @@
     "jsdoctest": "mocha --require jsdoctest `find src -type f -not -name \"*.spec.js\"`",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
+    "lint-staged": "lint-staged",
     "slay-mutants": "stryker run",
     "start": "http-server -p 8081 .",
     "test": "jest && npm run jsdoctest",
@@ -26,6 +27,9 @@
     ]
   },
   "pre-commit": [
+      "lint-staged",
+      "jsdoctest",
+      "slay-mutants"
   ],
   "repository": {
     "type": "git",
