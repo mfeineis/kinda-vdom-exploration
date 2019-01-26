@@ -1,6 +1,10 @@
 
 const prodUtils = {
-    checkEnvironment: () => {
+    checkEnvironment: (invariant, Arr = Array) => {
+        invariant(
+            typeof Arr.isArray === "function",
+            "'Array.isArray' is required"
+        );
     },
     invariant: (condition, message) => {
         if (!condition) {
@@ -11,8 +15,6 @@ const prodUtils = {
 };
 
 /**
- * @param {Number} a
- * @param {Number} b
  * @example
  *     add(1, 1) // => 2
  */
@@ -54,11 +56,9 @@ const configureRenderer = (utils, document) => {
     return render;
 };
 
-const hasDocument = typeof document !== "undefined";
-
-const render = hasDocument
-    ? configureRenderer(prodUtils, document)
-    : null;
+const render = typeof document === "undefined"
+    ? null
+    : configureRenderer(prodUtils, document);
 
 // FIXME: Make this eslint rule work with `module.exports`
 // eslint-disable-next-line immutable/no-mutation

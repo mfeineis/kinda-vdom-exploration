@@ -29,6 +29,8 @@ const describeUtils = (description, utils, next = () => {}) => {
 
         it("should have an 'invariant' function", () => {
             expect(invariant).toBeInstanceOf(Function);
+            expect(() => invariant(false, "Boom!")).toThrow();
+            expect(() => invariant(true, "Shiny!")).not.toThrow();
         });
 
         it("should have a 'trace' function", () => {
@@ -47,7 +49,20 @@ describe("domdom", () => {
 
     describe("the development utilities in use", () => {
 
-        describeUtils("the exported but unpublished 'utils'", DomDom._);
+        it("should not have a 'document' while testing", () => {
+            expect(typeof document).toBe("undefined");
+        });
+
+        describeUtils(
+            "the exported but unpublished 'utils'",
+            DomDom._,
+            ({ checkEnvironment, invariant }) => {
+                it("should use 'checkEnvironment' on the runtime env", () => {
+                    expect(() => checkEnvironment(invariant)).not.toThrow();
+                    expect(() => checkEnvironment(invariant, {})).toThrow();
+                });
+            }
+        );
         describeUtils("the test utils", makeTestUtils());
 
         const reportViolation = jest.fn();
@@ -64,6 +79,14 @@ describe("domdom", () => {
                 }
             })
         );
+
+    });
+
+    describe("the main exported 'render' function", () => {
+
+        it("should be 'null' while testing due to missing 'document'", () => {
+            expect(DomDom.render).toBeNull();
+        });
 
     });
 
