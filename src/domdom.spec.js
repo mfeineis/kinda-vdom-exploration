@@ -1,3 +1,7 @@
+/* eslint-disable max-len */
+
+const pkg = require("../package.json");
+
 const DomDom = require("./domdom");
 const DomDomDomServer = require("./domdom-dom-server");
 
@@ -82,6 +86,10 @@ describe("domdom", () => {
 
     });
 
+    it("should export the proper 'version' string matching the package version", () => {
+        expect(DomDom.version).toBe(pkg.version);
+    });
+
     describe("the main exported 'render' function", () => {
 
         it("should actually be a function with an arity of 2", () => {
@@ -130,10 +138,19 @@ describe("domdom", () => {
                 expect(report.mock.calls[0][0])
                     .toBe("Please provide a valid 'driver' into 'render'");
 
-                expect(() => render(DomDomDomServer.driver))
+                expect(() => render(DomDomDomServer))
                     .toThrow(InvariantViolation);
                 expect(report.mock.calls[1][0])
                     .toBe("Please provide a valid root definition");
+            });
+
+            it("should use the given 'driver' to transform the input", () => {
+                const identityDriver = (_, root) => root;
+
+                const render = configureRenderer(utils);
+
+                expect(render(identityDriver, ["div", "Hello, World!"]))
+                    .toEqual(["div", "Hello, World!"]);
             });
 
         });
@@ -145,12 +162,21 @@ describe("domdom", () => {
 describe("domdom-dom-server", () => {
     const { configureRenderer } = DomDom;
     const utils = makeTestUtils();
-    const { driver } = DomDomDomServer;
+    const driver = DomDomDomServer;
 
     const makeRender = () => configureRenderer(utils);
 
-    it("should export something", () => {
-        expect(DomDomDomServer).toBeDefined();
+    describe("the 'domdom-dom-server' driver", () => {
+
+        it("should be a function with arity 2", () => {
+            expect(typeof driver).toBe("function");
+            expect(driver).toHaveLength(2);
+        });
+
+        it("should export the proper 'version' string matching the package version", () => {
+            expect(driver.version).toBe(pkg.version);
+        });
+
     });
 
     describe("rendering easy static examples", () => {

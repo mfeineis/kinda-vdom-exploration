@@ -6,6 +6,7 @@
 </head>
 <body>
     <div id="root"></div>
+
     <script src="dist/domdom.js"></script>
     <script src="dist/domdom-dom-server.js"></script>
     <script>
@@ -18,10 +19,21 @@
              console.log.apply(console, ["[domdom.hello]"].concat(arguments));
          },
      };
-     const render = DomDom.configureRenderer(utils, document);
+     const render = DomDom.configureRenderer(utils);
 
-     console.log(render(DomDomDomServer.driver, "Hello, World!"));
-     console.log(render(DomDomDomServer.driver, ["div", "Hello, World!"]));
+     const makeSample = (data) => {
+         makeSample.count += 1;
+
+         const node = document.createElement("pre");
+         node.id = `sample${makeSample.count}`;
+         node.innerHTML = render(DomDomDomServer, data);
+
+         document.body.appendChild(node);
+     };
+     makeSample.count = 0;
+
+     makeSample("Hello, World!");
+     makeSample(["b", "Hello, World again!"]);
 
     </script>
 </body>
