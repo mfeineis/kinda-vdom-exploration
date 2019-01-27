@@ -3,6 +3,33 @@
 <head>
     <meta charset="utf-8">
     <title>DomDom Playground</title>
+    <style>
+
+     pre {
+         background-color: #eee;
+         border: #ccc 1px solid;
+         display: block;
+         padding: 10px;
+     }
+
+     .sample {
+         border: #cfc 1px solid;
+         padding: 10px;
+     }
+
+     .padding {
+         padding: 10px;
+     }
+
+     .font-weight-bold {
+         font-weight: bold;
+     }
+
+     .text-color-red {
+         color: #f00;
+     }
+
+    </style>
 </head>
 <body>
     <h1>DomDom Usage Samples</h1>
@@ -30,7 +57,7 @@
          node.id = "sample" + makeSample.count;
          node.innerHTML = "<h2>" + title + "</h2>" +
             "<pre>" + JSON.stringify(data) + "</pre>" +
-             render(DomDomDomServer, data);
+            "<div class='sample'>" + render(DomDomDomServer, data) + "</div>";
 
          document.body.appendChild(node);
      };
@@ -38,9 +65,15 @@
 
      makeSample("Simplest", "Hello, World!");
      makeSample("Simple but bold", ["b", "Hello, World again!"]);
-     makeSample("Muli-node", [
+     makeSample("Multi-node", [
          ["h3", "Node1"],
          ["h4", "Node2"],
+     ]);
+
+     makeSample("Using CSS", [
+        ["div", { "class": "text-color-red" }, "Red Text"],
+        ["div", { className: "font-weight-bold" }, "Bold Text"],
+        ["div", { classList: ["text-color-red", "font-weight-bold"] }, "Bold Red Text"],
      ]);
 
     </script>
