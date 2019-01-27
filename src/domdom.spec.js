@@ -206,5 +206,26 @@ describe("domdom-dom-server", () => {
 
     });
 
+    describe("handling props", () => {
+
+        it("should support providing props to elements", () => {
+            expect(render(["i", { class: "a b" }, "Maybe some icon!"]))
+                .toBe("<i class=\"a b\">Maybe some icon!</i>");
+        });
+
+        it("should ensure that props are sorted alphabetically", () => {
+            // eslint-disable-next-line sort-keys
+            expect(render(["i", { type: "b", class: "a" }]))
+                .toBe("<i class=\"a\" type=\"b\"></i>");
+        });
+
+        it("should ensure that empty props do not add unnecessary whitespace", () => {
+            expect(render(["br", {}])).toBe("<br/>");
+            expect(render(["i", {}])).toBe("<i></i>");
+            expect(render([["i", {}], ["b", {}]])).toBe("<i></i><b></b>");
+        });
+
+    });
+
 });
 
