@@ -1,10 +1,12 @@
+/* eslint-disable capitalized-comments */
+
 // FIXME: Make this eslint rule work with `module.exports`
 // eslint-disable-next-line immutable/no-mutation
 module.exports = (config) => {
     config.set({
         coverageAnalysis: "off",
-        // logLevel: "debug",
-        // mutate: ["src/**/*.js"],
+        //logLevel: "debug",
+        //mutate: ["src/**/*.js"],
         mutator: "javascript",
         packageManager: "npm",
         reporters: [

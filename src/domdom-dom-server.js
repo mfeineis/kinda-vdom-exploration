@@ -73,7 +73,7 @@ const isVoidElement = function (tagName) {
 
 /**
  * @example
- *     serializePropValue({ a: "a", b: "b" }) // => "{a:\"a\",b:\"b\"}"
+ *     serializePropValue({ a: "a", b: "b" }) // => "{\"a\":\"a\",\"b\":\"b\"}"
  */
 const serializePropValue = function (value) {
     return JSON.stringify(value);
