@@ -163,8 +163,8 @@ describe("domdom-dom-server", () => {
     const { configureRenderer } = DomDom;
     const utils = makeTestUtils();
     const driver = DomDomDomServer;
-
-    const makeRender = () => configureRenderer(utils);
+    const baseRender = configureRenderer(utils);
+    const render = (it) => baseRender(driver, it);
 
     describe("the 'domdom-dom-server' driver", () => {
 
@@ -182,32 +182,24 @@ describe("domdom-dom-server", () => {
     describe("rendering easy static examples", () => {
 
         it("should render the simplest helloworld", () => {
-            const render = makeRender();
-
-            expect(render(driver, "Hello, World!"))
+            expect(render( "Hello, World!"))
                 .toEqual("Hello, World!");
         });
 
         it("should render a static helloworld", () => {
-            const render = makeRender();
-
-            expect(render(driver, ["div", "Hello, World!"]))
+            expect(render(["div", "Hello, World!"]))
                 .toEqual("<div>Hello, World!</div>");
         });
 
         it("should render a static hellouniverse", () => {
-            const render = makeRender();
-
-            expect(render(driver, ["div", "Hello, Universe!"]))
+            expect(render(["div", "Hello, Universe!"]))
                 .toEqual("<div>Hello, Universe!</div>");
         });
 
         it("should render a static hellomultiverse", () => {
-            const render = makeRender();
-
-            expect(render(driver, ["span", "Hello, Multiverse!"]))
+            expect(render(["span", "Hello, Multiverse!"]))
                 .toEqual("<span>Hello, Multiverse!</span>");
-            expect(render(driver, ["h1", "Hello, Multiverse!"]))
+            expect(render(["h1", "Hello, Multiverse!"]))
                 .toEqual("<h1>Hello, Multiverse!</h1>");
         });
 
