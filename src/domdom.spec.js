@@ -1,6 +1,8 @@
+/* global Promise */
 /* eslint-disable max-len */
 
 const pkg = require("../package.json");
+const validateHtml = require("html5-validator");
 
 const DomDom = require("./domdom");
 const DomDomDomServer = require("./domdom-dom-server");
@@ -263,6 +265,88 @@ describe("domdom-dom-server", () => {
             voidElements.forEach((it) => {
                 expect(render([it, { class: "a b c" }, "Evil content"]))
                     .toBe(`<${it} class="a b c"/>`);
+            });
+        });
+
+    });
+
+    describe("rendering complex structures", () => {
+
+        it("should support rendering flat collections of nodes", () => {
+            const generated = render([
+                ["b"],
+                ["h1", "Heading"],
+                ["p", "Some Content"],
+            ]);
+
+            expect(generated).toBe([
+                "<b></b>",
+                "<h1>Heading</h1>",
+                "<p>Some Content</p>",
+            ].join(""));
+        });
+
+        it("should support rendering trees of nodes", async () => {
+            const generated = render([
+                ["!DOCTYPE html"],
+                ["html", { lang: "en" },
+                    ["head", ["title", "Testtitle"]],
+                    ["body",
+                        ["div",
+                            ["h1", "A Heading"],
+                            ["div",
+                                "Some inline text",
+                                ["b", "with bold text"],
+                                "and",
+                                ["i", "also italic stuff"],
+                                ["ol",
+                                    ["li", "Point 1"],
+                                    ["li", "Point 2"],
+                                    ["li", "Point 3"],
+                                ],
+                            ],
+                            ["p", "Second paragraph"],
+                        ],
+                    ],
+                ],
+            ]);
+
+            const expected = [
+                "<!DOCTYPE html>",
+                "<html lang=\"en\">",
+                "<head><title>Testtitle</title></head>",
+                "<body>",
+                "  <div>",
+                "    <h1>A Heading</h1>",
+                "    <div>",
+                "      Some inline text",
+                "      <b>with bold text</b>",
+                "      and",
+                "      <i>also italic stuff</i>",
+                "      <ol>",
+                "        <li>Point 1</li>",
+                "        <li>Point 2</li>",
+                "        <li>Point 3</li>",
+                "      </ol>",
+                "    </div>",
+                "    <p>Second paragraph</p>",
+                "  </div>",
+                "</body>",
+                "</html>",
+            ].map((it) => it.trim()).join("");
+
+            expect(generated).toBe(expected);
+
+            await Promise.all([
+                validateHtml(generated),
+                validateHtml(expected),
+            ]).then(([inResults, outResults]) => {
+                const inOk = inResults.messages.length === 0;
+                const outOk = outResults.messages.length === 0;
+
+                expect(inOk && outOk).toBe(true);
+            }).catch((error) => {
+                expect("Markup to be valid").toBe(error);
             });
         });
 
