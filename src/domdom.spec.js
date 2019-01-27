@@ -249,5 +249,24 @@ describe("domdom-dom-server", () => {
 
     });
 
+    describe("handling self-closing tags", () => {
+        // See https://www.w3.org/TR/html5/syntax.html#void-elements
+        const voidElements = "area base br col embed hr img input link meta param source track wbr".split(" ");
+
+        it("should recognize tags that need to be self-closing and render them accordingly", () => {
+            voidElements.forEach((it) => {
+                expect(render([it])).toBe(`<${it}/>`);
+            });
+        });
+
+        it("should apply props but ignore content", () => {
+            voidElements.forEach((it) => {
+                expect(render([it, { class: "a b c" }, "Evil content"]))
+                    .toBe(`<${it} class="a b c"/>`);
+            });
+        });
+
+    });
+
 });
 
