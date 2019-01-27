@@ -26,11 +26,17 @@
       "jest --findRelatedTests"
     ]
   },
-  "pre-commit": [
-      "lint-staged",
-      "jsdoctest",
-      "slay-mutants"
-  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": [
+        "npm run lint-staged"
+      ],
+      "pre-push": [
+        "npm run test",
+        "npm run slay-mutants"
+      ]
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mfeineis/kinda-vdom-exploration.git"
@@ -52,11 +58,11 @@
     "eslint-plugin-immutable": "^1.0.0",
     "eslint-plugin-jest": "^22.1.3",
     "http-server": "^0.11.1",
+    "husky": "^1.3.1",
     "jest": "^24.0.0",
     "jsdoctest": "^1.7.1",
     "lint-staged": "^8.1.0",
     "mocha": "^5.2.0",
-    "pre-commit": "^1.2.2",
     "ramda": "^0.26.1",
     "rollup": "^1.1.2",
     "rollup-plugin-commonjs": "^9.2.0",
