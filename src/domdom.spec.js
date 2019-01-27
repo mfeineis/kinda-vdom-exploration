@@ -239,6 +239,22 @@ describe("domdom-dom-server", () => {
             expect(render([["i", {}], ["b", {}]])).toBe("<i></i><b></b>");
         });
 
+        describe("handling special props", () => {
+
+            it("should support strings for 'class' and 'className' prop", () => {
+                expect(render(["i", { class: "a b c" }]))
+                    .toBe("<i class=\"a b c\"></i>");
+                expect(render(["i", { className: "a b c" }]))
+                    .toBe("<i class=\"a b c\"></i>");
+            });
+
+            it("should support list of strings for 'classList' prop", () => {
+                expect(render(["i", { classList: ["a", "b", "c"] }]))
+                    .toBe("<i class=\"a b c\"></i>");
+            });
+
+        });
+
     });
 
     describe("handling simple edge cases", () => {
