@@ -244,6 +244,15 @@ describe("domdom-dom-server", () => {
             expect(render([["i", {}], ["b", {}]])).toBe("<i></i><b></b>");
         });
 
+        it("should serialize object props using JSON", () => {
+            expect(render(["i", { aang: "Avatar" }, "the Last Airbender"]))
+                .toBe("<i aang=\"Avatar\">the Last Airbender</i>");
+            expect(render(["i", { teamAvatar: ["Aang", "Katara", "Soka"] }]))
+                .toBe("<i teamAvatar='[\"Aang\",\"Katara\",\"Soka\"]'></i>");
+            expect(render(["i", { a: { b: { c: "d" } } }]))
+                .toBe("<i a='{\"b\":{\"c\":\"d\"}}'></i>");
+        });
+
         describe("handling special props", () => {
 
             describe("'class', 'className' and 'classList'", () => {

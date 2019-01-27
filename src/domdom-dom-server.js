@@ -104,7 +104,7 @@ const spreadProps = function (props) {
         }
 
         const value = props[key];
-        if (isObject(value)) {
+        if (isObject(value) || isArray(value)) {
             if (key === "data") {
                 return Object.keys(value).sort().map((name) => {
                     const propValue = value[name];
@@ -116,7 +116,7 @@ const spreadProps = function (props) {
                 }).join("");
             }
 
-            return ` ${key}="${serializePropValue(value)}"`;
+            return ` ${key}='${serializePropValue(value)}'`;
         }
 
         return ` ${key}="${value}"`;
