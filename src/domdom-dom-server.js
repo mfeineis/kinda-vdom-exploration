@@ -73,28 +73,30 @@ const isVoidElement = function (tagName) {
 
 /**
  * @example
- *     spreadProps({ class: "a b c" }) // => " class=\"a b c\""
- *     spreadProps({ className: "a b c" }) // => " class=\"a b c\""
- *     spreadProps({ classList: ["a", "b"] }) // => " class=\"a b\""
+ *     spreadProps({ class: "b a c" }) // => " class=\"a b c\""
+ *     spreadProps({ className: "c a b" }) // => " class=\"a b c\""
+ *     spreadProps({ classList: ["b", "a"] }) // => " class=\"a b\""
  *     spreadProps({ c: "d", a: "b" }) // => " a=\"b\" c=\"d\""
  *     spreadProps([]) // => ""
  *     spreadProps(/regex/) // => ""
  *     spreadProps(() => {}) // => ""
  */
 const spreadProps = function (props) {
-    const result = Object.keys(props).sort().map((key) => {
+    return Object.keys(props).sort().map((key) => {
+        if (key === "class") {
+            return ` class="${props[key].split(" ").sort().join(" ")}"`;
+        }
+
         if (key === "className") {
-            return ` class="${props[key]}"`;
+            return ` class="${props[key].split(" ").sort().join(" ")}"`;
         }
 
         if (key === "classList") {
-            return ` class="${props[key].join(" ")}"`;
+            return ` class="${props[key].sort().join(" ")}"`;
         }
 
         return ` ${key}="${props[key]}"`;
-    });
-
-    return result.join("");
+    }).join("");
 };
 
 const transform = (utils, root) => {

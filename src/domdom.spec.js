@@ -246,16 +246,29 @@ describe("domdom-dom-server", () => {
 
         describe("handling special props", () => {
 
-            it("should support strings for 'class' and 'className' prop", () => {
-                expect(render(["i", { class: "a b c" }]))
-                    .toBe("<i class=\"a b c\"></i>");
-                expect(render(["i", { className: "a b c" }]))
-                    .toBe("<i class=\"a b c\"></i>");
-            });
+            describe("'class', 'className' and 'classList'", () => {
 
-            it("should support list of strings for 'classList' prop", () => {
-                expect(render(["i", { classList: ["a", "b", "c"] }]))
-                    .toBe("<i class=\"a b c\"></i>");
+                it("should support strings for 'class' and 'className' prop", () => {
+                    expect(render(["i", { class: "a b c" }]))
+                        .toBe("<i class=\"a b c\"></i>");
+                    expect(render(["i", { className: "a b c" }]))
+                        .toBe("<i class=\"a b c\"></i>");
+                });
+
+                it("should support list of strings for 'classList' prop", () => {
+                    expect(render(["i", { classList: ["a", "b", "c"] }]))
+                        .toBe("<i class=\"a b c\"></i>");
+                });
+
+                it("should sort CSS classes alphabetically for stable renders", () => {
+                    expect(render(["i", { class: "b a c" }]))
+                        .toBe("<i class=\"a b c\"></i>");
+                    expect(render(["i", { className: "b a c" }]))
+                        .toBe("<i class=\"a b c\"></i>");
+                    expect(render(["i", { classList: ["b", "a", "c"] }]))
+                        .toBe("<i class=\"a b c\"></i>");
+                });
+
             });
 
         });
