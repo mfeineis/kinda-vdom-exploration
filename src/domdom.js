@@ -1,9 +1,13 @@
 
 const prodUtils = {
-    checkEnvironment: (invariant, Arr = Array) => {
+    checkEnvironment: (invariant, Arr = Array, Obj = Object) => {
         invariant(
             typeof Arr.isArray === "function",
             "'Array.isArray' is required"
+        );
+        invariant(
+            typeof Obj.keys === "function",
+            "'Object.keys' is required"
         );
     },
     invariant: (condition, message) => {
