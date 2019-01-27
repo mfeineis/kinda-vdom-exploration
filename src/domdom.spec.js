@@ -227,5 +227,27 @@ describe("domdom-dom-server", () => {
 
     });
 
+    describe("handling simple edge cases", () => {
+
+        it("should not treat <!DOCTYPE ...> definitions as normal nodes", () => {
+            expect(render(["!DOCTYPE html"])).toBe("<!DOCTYPE html>");
+        });
+
+        it("should be fine with rendering nothing", () => {
+            expect(render([])).toBe("");
+            expect(render([[]])).toBe("");
+            expect(render([[[]]])).toBe("");
+        });
+
+        it("should output elements without content", () => {
+            expect(render(["div"])).toBe("<div></div>");
+            expect(render(["div", null])).toBe("<div></div>");
+            expect(render(["div", false])).toBe("<div></div>");
+            expect(render(["div", false, null])).toBe("<div></div>");
+            expect(render(["div", null, false])).toBe("<div></div>");
+        });
+
+    });
+
 });
 
