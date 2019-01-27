@@ -141,7 +141,7 @@ describe("domdom", () => {
                 expect(() => render(DomDomDomServer))
                     .toThrow(InvariantViolation);
                 expect(report.mock.calls[1][0])
-                    .toBe("Please provide a valid root definition");
+                    .toBe("Please provide a valid root element");
             });
 
             it("should use the given 'driver' to transform the input", () => {
