@@ -64,6 +64,7 @@ describe("domdom", () => {
                 it("should use 'checkEnvironment' on the runtime env", () => {
                     expect(() => checkEnvironment(invariant)).not.toThrow();
                     expect(() => checkEnvironment(invariant, {})).toThrow();
+                    expect(() => checkEnvironment(invariant, undefined, {})).toThrow();
                 });
             }
         );
