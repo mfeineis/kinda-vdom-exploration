@@ -23,15 +23,10 @@ const add = function (a, b) { // eslint-disable-line no-unused-vars
     return a + b;
 };
 
-const configureRenderer = (utils, document) => {
+const configureRenderer = (utils) => {
     const { checkEnvironment, invariant, trace } = utils || prodUtils;
 
     checkEnvironment(invariant);
-
-    invariant(
-        document,
-        "Please pass a valid 'document' to configure a renderer"
-    );
 
     function render(driver, root) {
         invariant(
@@ -43,7 +38,7 @@ const configureRenderer = (utils, document) => {
             "Please provide a valid root definition"
         );
 
-        trace(utils, document, driver, root);
+        trace(utils, driver, root);
 
         if (typeof root === "string") {
             return root;
@@ -56,9 +51,7 @@ const configureRenderer = (utils, document) => {
     return render;
 };
 
-const render = typeof document === "undefined"
-    ? null
-    : configureRenderer(prodUtils, document);
+const render = configureRenderer(prodUtils);
 
 // FIXME: Make this eslint rule work with `module.exports`
 // eslint-disable-next-line immutable/no-mutation

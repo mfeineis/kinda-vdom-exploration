@@ -84,8 +84,9 @@ describe("domdom", () => {
 
     describe("the main exported 'render' function", () => {
 
-        it("should be 'null' while testing due to missing 'document'", () => {
-            expect(DomDom.render).toBeNull();
+        it("should actually be a function with an arity of 2", () => {
+            expect(typeof DomDom.render).toBe("function");
+            expect(DomDom.render).toHaveLength(2);
         });
 
     });
@@ -99,27 +100,14 @@ describe("domdom", () => {
         });
 
         it("should use the internal 'utils' if not provided", () => {
-            expect(() => configureRenderer(null, null)).toThrow(Error);
-        });
-
-        it("should check that it has been passed a valid document", () => {
-            const report = jest.fn();
-            const tracingUtils = makeTestUtils(report);
-
-            expect(() => configureRenderer(tracingUtils, null))
-                .toThrow(InvariantViolation);
-            expect(report.mock.calls[0][0])
-                .toBe(
-                    "Please pass a valid 'document' to configure a renderer"
-                );
+            expect(() => configureRenderer(null)).not.toThrow();
         });
 
         it("should check the current environment for compatibility", () => {
-            const doc = {};
             const checkEnv = jest.fn();
             const customUtils = makeTestUtils(undefined, checkEnv);
 
-            configureRenderer(customUtils, doc);
+            configureRenderer(customUtils);
 
             expect(checkEnv.mock.calls[0][0]).toBe(customUtils.invariant);
         });
@@ -132,12 +120,11 @@ describe("domdom", () => {
         });
 
         describe("a configured 'render' function", () => {
-            const doc = {};
 
             it("should check the given 'driver' and 'root'", () => {
                 const report = jest.fn();
                 const tracingUtils = makeTestUtils(report);
-                const render = configureRenderer(tracingUtils, doc);
+                const render = configureRenderer(tracingUtils);
 
                 expect(() => render()).toThrow(InvariantViolation);
                 expect(report.mock.calls[0][0])
@@ -158,10 +145,9 @@ describe("domdom", () => {
 describe("domdom-dom-server", () => {
     const { configureRenderer } = DomDom;
     const utils = makeTestUtils();
-    const doc = {};
     const { driver } = DomDomDomServer;
 
-    const makeRender = () => configureRenderer(utils, doc);
+    const makeRender = () => configureRenderer(utils);
 
     it("should export something", () => {
         expect(DomDomDomServer).toBeDefined();
