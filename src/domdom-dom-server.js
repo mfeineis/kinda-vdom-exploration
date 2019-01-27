@@ -73,6 +73,14 @@ const isVoidElement = function (tagName) {
 
 /**
  * @example
+ *     serializePropValue({ a: "a", b: "b" }) // => "{a:\"a\",b:\"b\"}"
+ */
+const serializePropValue = function (value) {
+    return JSON.stringify(value);
+};
+
+/**
+ * @example
  *     spreadProps({ class: "b a c" }) // => " class=\"a b c\""
  *     spreadProps({ className: "c a b" }) // => " class=\"a b c\""
  *     spreadProps({ classList: ["b", "a"] }) // => " class=\"a b\""
@@ -95,7 +103,23 @@ const spreadProps = function (props) {
             return ` class="${props[key].sort().join(" ")}"`;
         }
 
-        return ` ${key}="${props[key]}"`;
+        const value = props[key];
+        if (isObject(value)) {
+            if (key === "data") {
+                return Object.keys(value).sort().map((name) => {
+                    const propValue = value[name];
+                    if (isString(propValue)) {
+                        return ` data-${name}="${propValue}"`;
+                    }
+
+                    return ` data-${name}='${serializePropValue(propValue)}'`;
+                }).join("");
+            }
+
+            return ` ${key}="${serializePropValue(value)}"`;
+        }
+
+        return ` ${key}="${value}"`;
     }).join("");
 };
 

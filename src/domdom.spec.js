@@ -271,6 +271,39 @@ describe("domdom-dom-server", () => {
 
             });
 
+            describe("'data-' properties", () => {
+
+                it("should support plain 'data-id' property names", () => {
+                    expect(render(["i", { "data-id": "boring" }]))
+                        .toBe("<i data-id=\"boring\"></i>");
+                });
+
+                it("should support a special 'data' prop for convenience", () => {
+                    expect(render(
+                        ["i", {
+                            data: {
+                                id: "interesting",
+                                key: "whoohooo!",
+                            },
+                        }]
+                    )).toBe("<i data-id=\"interesting\" data-key=\"whoohooo!\"></i>");
+                    expect(render(
+                        ["i", {
+                            data: {
+                                config: {
+                                    answer: 42,
+                                    some: "value",
+                                },
+                                key: "whoohooo!",
+                                // eslint-disable-next-line sort-keys
+                                id: "interesting",
+                            },
+                        }]
+                    )).toBe("<i data-config='{\"answer\":42,\"some\":\"value\"}' data-id=\"interesting\" data-key=\"whoohooo!\"></i>");
+                });
+
+            });
+
         });
 
     });
