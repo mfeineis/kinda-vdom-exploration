@@ -213,6 +213,11 @@ describe("domdom-dom-server", () => {
 
     describe("handling props", () => {
 
+        it("should only enumerate own properties", () => {
+            const obj = Object.create({ enumerateMe: false });
+            expect(render(["i", obj])).toBe("<i></i>");
+        });
+
         it("should degrade gracefully if invalid props are supplied", () => {
             expect(render(["i", /rx/])).toBe("<i></i>");
             expect(render(["i", null, /rx/])).toBe("<i></i>");
