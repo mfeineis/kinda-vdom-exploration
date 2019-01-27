@@ -62,11 +62,14 @@ describe("domdom", () => {
         describeUtils(
             "the exported but unpublished 'utils'",
             DomDom._,
-            ({ checkEnvironment, invariant }) => {
+            ({ checkEnvironment, invariant, trace }) => {
                 it("should use 'checkEnvironment' on the runtime env", () => {
                     expect(() => checkEnvironment(invariant)).not.toThrow();
                     expect(() => checkEnvironment(invariant, {})).toThrow();
                     expect(() => checkEnvironment(invariant, undefined, {})).toThrow();
+                });
+                it("should provide a 'trace' function", () => {
+                    expect(() => trace()).not.toThrow();
                 });
             }
         );
@@ -209,6 +212,15 @@ describe("domdom-dom-server", () => {
     });
 
     describe("handling props", () => {
+
+        it("should degrade gracefully if invalid props are supplied", () => {
+            expect(render(["i", /rx/])).toBe("<i></i>");
+            expect(render(["i", null, /rx/])).toBe("<i></i>");
+        });
+
+        it("should degrade gracefully if invalid props and children are supplied", () => {
+            expect(render(["i", /rx1/, /rx2/])).toBe("<i></i>");
+        });
 
         it("should support providing props to elements", () => {
             expect(render(["i", { class: "a b" }, "Maybe some icon!"]))

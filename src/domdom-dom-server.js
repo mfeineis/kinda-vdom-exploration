@@ -1,4 +1,50 @@
 
+/**
+ * @example
+ *     compact([1, null, 2, false, undefined, 3]) // => [1, 2, 3]
+ */
+const compact = function (it) {
+    // FIXME: `jsdoctest` doesn't recognize arrow syntax apparently
+    return it.filter(Boolean);
+};
+
+const isArray = Array.isArray;
+
+/**
+ * @example
+ *     isObject({}) // => true
+ *     isObject(Object) // => false
+ *     isObject(() => {}) // => false
+ *     isObject(function () {}) // => false
+ *     isObject([]) // => false
+ *     isObject(/regex/) // => false
+ *     isObject(null) // => false
+ *     isObject(undefined) // => false
+ *     isObject("Not an object") // => false
+ *     isObject(0) // => false
+ *     isObject(42) // => false
+ */
+const isObject = function (it) {
+    return !isArray(it) &&
+        typeof it === "object" &&
+        it !== null &&
+        !(it instanceof RegExp);
+};
+
+/**
+ * @example
+ *     isString("A real hero") // => true
+ *     isString("") // => true
+ *     isString({}) // => false
+ *     isString(null) // => false
+ *     isString(undefined) // => false
+ *     isString(42) // => false
+ *     isString(/regex/) // => false
+ */
+const isString = function (it) {
+    return typeof it === "string";
+};
+
 const voidElementLookup = {
     area: true,
     base: true,
@@ -16,17 +62,24 @@ const voidElementLookup = {
     wbr: true,
 };
 
-const compact = (it) => it.filter(Boolean);
-const isArray = Array.isArray;
-const isObject = (it) => !isArray(it) && typeof it === "object";
-const isString = (it) => typeof it === "string";
-const isVoidElement = (tagName) => voidElementLookup[tagName];
+/**
+ * @example
+ *     isVoidElement("br") // => true
+ *     isVoidElement("div") // => false
+ */
+const isVoidElement = function (tagName) {
+    return Boolean(voidElementLookup[tagName]);
+};
 
-const spread = (props) => {
-    if (!props) {
-        return "";
-    }
-
+/**
+ * @example
+ *     spreadProps({ class: "a b c" }) // => " class=\"a b c\""
+ *     spreadProps({ c: "d", a: "b" }) // => " a=\"b\" c=\"d\""
+ *     spreadProps([]) // => ""
+ *     spreadProps(/regex/) // => ""
+ *     spreadProps(() => {}) // => ""
+ */
+const spreadProps = function (props) {
     const result = Object.keys(props).sort()
         .map((key) => ` ${key}="${props[key]}"`);
 
@@ -52,6 +105,10 @@ const transform = (utils, root) => {
             return traversable;
         }
 
+        if (!isArray(traversable)) {
+            return "";
+        }
+
         if (isArray(traversable[0])) {
             return compact(traversable).map(traverse).join("");
         }
@@ -61,12 +118,12 @@ const transform = (utils, root) => {
         const hasProps = isObject(props);
         const children = compact(hasProps ? childrenWithoutProps : allChildren);
 
-        if (!tagName && !props && children.length === 0) {
+        if (!tagName) {
             return "";
         }
 
         if (isVoidElement(tagName)) {
-            return `<${tagName}${hasProps ? spread(props) : ""}/>`;
+            return `<${tagName}${hasProps ? spreadProps(props) : ""}/>`;
         }
 
         if (/\s*!DOCTYPE/.test(tagName)) {
@@ -74,7 +131,7 @@ const transform = (utils, root) => {
         }
 
         const subTree = children.map(traverse).join("");
-        const propsString = hasProps ? spread(props) : "";
+        const propsString = hasProps ? spreadProps(props) : "";
 
         return `<${tagName}${propsString}>${subTree}</${tagName}>`;
     };

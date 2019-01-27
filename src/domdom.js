@@ -18,15 +18,6 @@ const prodUtils = {
     trace: () => {},
 };
 
-/**
- * @example
- *     add(1, 1) // => 2
- */
-const add = function (a, b) { // eslint-disable-line no-unused-vars
-    // FIXME: `jsdoctest` doesn't recognize arrow syntax apparently
-    return a + b;
-};
-
 const configureRenderer = (utils) => {
     const { checkEnvironment, invariant } = utils || prodUtils;
 
