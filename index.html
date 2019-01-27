@@ -12,6 +12,10 @@
          padding: 10px;
      }
 
+     .code {
+         background-color: #ccc;
+     }
+
      .sample {
          border: #cfc 1px solid;
          padding: 10px;
@@ -55,9 +59,14 @@
 
          const node = document.createElement("div");
          node.id = "sample" + makeSample.count;
+         const code = render(DomDomDomServer, data);
          node.innerHTML = "<h2>" + title + "</h2>" +
             "<pre>" + JSON.stringify(data) + "</pre>" +
-            "<div class='sample'>" + render(DomDomDomServer, data) + "</div>";
+            "<div class='sample'>" + code + "</div>";
+
+         const pre = document.createElement("pre");
+         pre.innerText = code;
+         node.appendChild(pre);
 
          document.body.appendChild(node);
      };
@@ -75,6 +84,7 @@
         ["div", { className: "font-weight-bold" }, "Bold Text"],
         ["div", { classList: ["text-color-red", "font-weight-bold"] }, "Bold Red Text"],
      ]);
+     makeSample("Using 'data-' props", ["i", { data: { id: "id", key: "key" } }, "id key"]);
 
     </script>
 </body>
