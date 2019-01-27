@@ -1,3 +1,4 @@
+/* eslint-disable capitalized-comments, max-len */
 module.exports = {
     "env": {
         "browser": true,

@@ -29,7 +29,7 @@
   "husky": {
     "hooks": {
       "pre-commit": "npm run lint-staged",
-      "pre-push": "npm run test && npm run slay-mutants"
+      "pre-push": "npm run cov && npm run slay-mutants"
     }
   },
   "repository": {

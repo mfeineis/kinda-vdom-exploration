@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+/* eslint-disable capitalized-comments, max-len */
 
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
@@ -44,8 +44,14 @@ module.exports = {
     // ],
 
     // An object that configures minimum threshold enforcement for coverage results
-    // coverageThreshold: null,
-
+    "coverageThreshold": {
+        "global": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+        }
+    },
     // A path to a custom dependency extractor
     // dependencyExtractor: null,
 
