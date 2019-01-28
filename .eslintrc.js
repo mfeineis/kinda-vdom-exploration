@@ -42,6 +42,7 @@ module.exports = {
         ],
         "max-len": 2,
         "no-inline-comments": 2,
+        "no-magic-numbers": 2,
         "no-param-reassign": 2,
         "no-shadow": 2,
         "no-undef": 2,
