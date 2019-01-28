@@ -10,7 +10,7 @@ const FIRST_ELEMENT = 0;
  *     assembleProps("", ["X"], { class: "Z", className: "Y" })
  *     // => { classList: ["X", "Z", "Y"] }
  */
-const assembleProps = function (id, classNames = [], props) {
+const assembleProps = function (id, classNames, props) {
     if (id) {
         if (props.id) {
             throw new Error(`Multiple IDs "${id}"/${props.id} provided`);
@@ -50,8 +50,6 @@ const compact = function (it) {
     return it.filter(Boolean);
 };
 
-const isArray = Array.isArray;
-
 /**
  * @example
  *     extractTagMeta("div") // => ["div", "", []]
@@ -61,14 +59,16 @@ const isArray = Array.isArray;
  *     // => ["i", "idx", ["some-class", "fx42"]]
  */
 const extractTagMeta = function (tagName) {
-    const tag = (tagName.match(/^[^.#]+/) || [])[FIRST_ELEMENT];
-    const id =
-        (tagName.match(/#[^.]+/) || [""])[FIRST_ELEMENT].replace("#", "");
+    const tag = tagName.match(/^[^.#]+/)[FIRST_ELEMENT];
+    const id = (tagName.match(/#[^.]+/) || [""])[FIRST_ELEMENT]
+        .replace("#", "");
     const classNames = (tagName.match(/\.[^.#]+/g) || []).map((cls) => {
         return cls.replace(".", "");
     });
     return [tag, id, classNames];
 };
+
+const isArray = Array.isArray;
 
 /**
  * @example
@@ -117,7 +117,7 @@ const isString = function (it) {
  *     isValidTagName("^&") // => false
  */
 const isValidTagName = function (tagName) {
-    const ids = tagName.match(/#/g);
+    const ids = (tagName || "").match(/#/g);
     // eslint-disable-next-line no-magic-numbers
     const hasAtMostOneId = !ids || ids.length <= 1;
     const onlyContainsValidCharacters = /^[1-9a-zA-Z#-.]+$/.test(tagName);
@@ -129,8 +129,7 @@ const isValidTagName = function (tagName) {
         endsSimple &&
         hasAtMostOneId &&
         onlyContainsValidCharacters &&
-        !hasConsecutive &&
-        true;
+        !hasConsecutive;
 };
 
 const voidElementLookup = {
@@ -239,10 +238,6 @@ const transform = (utils, root) => {
         const [, ...allChildren] = traversable;
         const hasProps = isObject(maybeProps);
         const children = compact(hasProps ? childrenWithoutProps : allChildren);
-
-        if (!tagName) {
-            return "";
-        }
 
         if (/\s*!DOCTYPE/.test(tagName)) {
             // FIXME: Validate doctype structure

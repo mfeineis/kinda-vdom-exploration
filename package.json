@@ -6,6 +6,8 @@
   "scripts": {
     "build": "NODE_ENV=production rollup --config rollup.config.js",
     "cov": "jest --coverage",
+    "guard-commit": "npm run lint-staged && npm run jsdoctest",
+    "guard-push": "npm run cov && npm run slay-mutants",
     "jsdoctest": "mocha --require jsdoctest `find src -type f -not -name \"*.spec.js\"`",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
@@ -28,8 +30,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run lint-staged",
-      "pre-push": "npm run cov && npm run slay-mutants"
+      "pre-commit": "npm run guard-commit",
+      "pre-push": "npm run guard-push"
     }
   },
   "repository": {

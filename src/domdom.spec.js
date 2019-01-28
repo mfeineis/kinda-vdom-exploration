@@ -339,6 +339,18 @@ describe("domdom-dom-server", () => {
                         .toBe("<i class=\"a b c\"></i>");
                 });
 
+                it("should omit empty an 'classList'", () => {
+                    expect(render(["i", { classList: [] }])).toBe("<i></i>");
+                });
+
+            });
+
+            describe("should merge Emmet, 'class', 'className' and 'classList'", () => {
+                expect(render(["i#a.z.y", {
+                    class: "M N",
+                    classList: ["O", "Q"],
+                    className: "P",
+                }])).toBe("<i class=\"M N O P Q y z\" id=\"a\"></i>");
             });
 
             describe("'data-' properties", () => {
@@ -384,10 +396,10 @@ describe("domdom-dom-server", () => {
             expect(render(["!DOCTYPE html"])).toBe("<!DOCTYPE html>");
         });
 
-        it("should be fine with rendering nothing", () => {
-            expect(render([])).toBe("");
-            expect(render([[]])).toBe("");
-            expect(render([[[]]])).toBe("");
+        it("should not be fine with trying to render nothing", () => {
+            expect(() => render([])).toThrow();
+            expect(() => render([[]])).toThrow();
+            expect(() => render([[[]]])).toThrow();
         });
 
         it("should output elements without content", () => {
@@ -396,6 +408,10 @@ describe("domdom-dom-server", () => {
             expect(render(["div", false])).toBe("<div></div>");
             expect(render(["div", false, null])).toBe("<div></div>");
             expect(render(["div", null, false])).toBe("<div></div>");
+        });
+
+        it("should panic if no 'tagName' is given", () => {
+            expect(() => render([null, "Some text"])).toThrow();
         });
 
     });
