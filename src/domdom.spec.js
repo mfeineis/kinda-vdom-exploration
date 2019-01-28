@@ -1,5 +1,5 @@
 /* global Promise */
-/* eslint-disable max-len */
+/* eslint-disable max-len, no-magic-numbers */
 
 const pkg = require("../package.json");
 const validateHtml = require("html5-validator");
@@ -211,6 +211,67 @@ describe("domdom-dom-server", () => {
 
     });
 
+    describe("'tagName' features", () => {
+
+        it("should support valid plain strings", () => {
+            expect(render(["i"])).toBe("<i></i>");
+            expect(render(["div"])).toBe("<div></div>");
+            expect(render(["script"])).toBe("<script></script>");
+        });
+
+        it("should reject invalid characters by panicing", () => {
+            expect(() => render(["ä"])).toThrow();
+            expect(() => render(["/"])).toThrow();
+            expect(() => render(["\\"])).toThrow();
+        });
+
+        it("should reject malformed tag names", () => {
+            expect(() => render([".#"])).toThrow();
+            expect(() => render(["-.#"])).toThrow();
+            expect(() => render(["div.#"])).toThrow();
+            expect(() => render(["div#."])).toThrow();
+            expect(() => render(["div#.."])).toThrow();
+            expect(() => render(["div#asdf."])).toThrow();
+            expect(() => render(["div."])).toThrow();
+            expect(() => render(["div.asdf#"])).toThrow();
+            expect(() => render(["div.asdf-#-"])).toThrow();
+        });
+
+        it("should support adding an id via '#' emmet like syntax", () => {
+            expect(render(["div#some-id"])).toBe("<div id=\"some-id\"></div>");
+        });
+
+        it("should make sure that at most one '#' is accepted", () => {
+            expect(() => render(["div#id1#id2"])).toThrow();
+        });
+
+        it("should panic if more than one id is supplied via tag and prop", () => {
+            expect(() => render(["div#idx", { id: "idy" }])).toThrow();
+        });
+
+        it("should support adding CSS classes via '.' emmet like syntax", () => {
+            expect(render(["div.some-class.another"]))
+                .toBe("<div class=\"another some-class\"></div>");
+        });
+
+        it("should support a combination of '#' and '.' emmet like syntax", () => {
+            expect(render(["div#idx.some-class.another"]))
+                .toBe("<div class=\"another some-class\" id=\"idx\"></div>");
+            expect(render(["div#a.X.Y", {
+                class: "Z",
+                classList: ["N", "O"],
+                className: "M",
+            }])).toBe(
+                "<div class=\"M N O X Y Z\" id=\"a\"></div>"
+            );
+        });
+
+        it("should de-duplicate CSS class names", () => {
+            expect(render(["div.X.X"])).toBe("<div class=\"X\"></div>");
+        });
+
+    });
+
     describe("handling props", () => {
 
         it("should only enumerate own properties", () => {
@@ -362,15 +423,15 @@ describe("domdom-dom-server", () => {
 
         it("should support rendering flat collections of nodes", () => {
             const generated = render([
-                ["b"],
-                ["h1", "Heading"],
-                ["p", "Some Content"],
+                ["b#important"],
+                ["h1.highlighted", "Heading"],
+                ["p.y.x", "Some Content"],
             ]);
 
             expect(generated).toBe([
-                "<b></b>",
-                "<h1>Heading</h1>",
-                "<p>Some Content</p>",
+                "<b id=\"important\"></b>",
+                "<h1 class=\"highlighted\">Heading</h1>",
+                "<p class=\"x y\">Some Content</p>",
             ].join(""));
         });
 
@@ -380,7 +441,7 @@ describe("domdom-dom-server", () => {
                 ["html", { lang: "en" },
                     ["head", ["title", "Testtitle"]],
                     ["body",
-                        ["div",
+                        ["div#main.section.padding-top-5",
                             ["h1", "A Heading"],
                             ["div",
                                 "Some inline text",
@@ -388,7 +449,7 @@ describe("domdom-dom-server", () => {
                                 "and",
                                 ["i", "also italic stuff"],
                                 ["ol",
-                                    ["li", "Point 1"],
+                                    ["li.--active", "Point 1"],
                                     ["li", "Point 2"],
                                     ["li", "Point 3"],
                                 ],
@@ -404,7 +465,7 @@ describe("domdom-dom-server", () => {
                 "<html lang=\"en\">",
                 "<head><title>Testtitle</title></head>",
                 "<body>",
-                "  <div>",
+                "  <div class=\"padding-top-5 section\" id=\"main\">",
                 "    <h1>A Heading</h1>",
                 "    <div>",
                 "      Some inline text",
@@ -412,7 +473,7 @@ describe("domdom-dom-server", () => {
                 "      and",
                 "      <i>also italic stuff</i>",
                 "      <ol>",
-                "        <li>Point 1</li>",
+                "        <li class=\"--active\">Point 1</li>",
                 "        <li>Point 2</li>",
                 "        <li>Point 3</li>",
                 "      </ol>",

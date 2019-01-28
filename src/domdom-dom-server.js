@@ -1,3 +1,45 @@
+const FIRST_ELEMENT = 0;
+
+/**
+ * @example
+ *     assembleProps("a", [], {}) // => { id: "a" }
+ *     assembleProps("a", ["X"], { class: "Y" })
+ *     // => { id: "a", classList: ["X", "Y"] }
+ *     assembleProps("", ["X"], { className: "Y" })
+ *     // => { classList: ["X", "Y"] }
+ *     assembleProps("", ["X"], { class: "Z", className: "Y" })
+ *     // => { classList: ["X", "Z", "Y"] }
+ */
+const assembleProps = function (id, classNames = [], props) {
+    if (id) {
+        if (props.id) {
+            throw new Error(`Multiple IDs "${id}"/${props.id} provided`);
+        }
+
+        // eslint-disable-next-line immutable/no-mutation
+        props.id = id;
+    }
+
+    // eslint-disable-next-line immutable/no-let
+    let classList = classNames.concat(props.classList || []);
+
+    if (props.class) {
+        classList = classList.concat(props.class.split(" "));
+        delete props.class;
+    }
+
+    if (props.className) {
+        classList = classList.concat(props.className.split(" "));
+        delete props.className;
+    }
+
+    if (classList.length) {
+        // eslint-disable-next-line immutable/no-mutation
+        props.classList = classList;
+    }
+
+    return props;
+};
 
 /**
  * @example
@@ -9,6 +51,24 @@ const compact = function (it) {
 };
 
 const isArray = Array.isArray;
+
+/**
+ * @example
+ *     extractTagMeta("div") // => ["div", "", []]
+ *     extractTagMeta("div#some-id") // => ["div", "some-id", []]
+ *     extractTagMeta("div.cls-a.cls-b") // => ["div", "", ["cls-a", "cls-b"]]
+ *     extractTagMeta("i#idx.some-class.fx42")
+ *     // => ["i", "idx", ["some-class", "fx42"]]
+ */
+const extractTagMeta = function (tagName) {
+    const tag = (tagName.match(/^[^.#]+/) || [])[FIRST_ELEMENT];
+    const id =
+        (tagName.match(/#[^.]+/) || [""])[FIRST_ELEMENT].replace("#", "");
+    const classNames = (tagName.match(/\.[^.#]+/g) || []).map((cls) => {
+        return cls.replace(".", "");
+    });
+    return [tag, id, classNames];
+};
 
 /**
  * @example
@@ -43,6 +103,34 @@ const isObject = function (it) {
  */
 const isString = function (it) {
     return typeof it === "string";
+};
+
+/**
+ * @example
+ *     isValidTagName("div") // => true
+ *     isValidTagName("div#idx") // => true
+ *     isValidTagName("div.shiny.text-size-large") // => true
+ *     isValidTagName("x-tag") // => true
+ *     isValidTagName("my-custom-elem-v1") // => true
+ *     isValidTagName("my-elem1") // => true
+ *     isValidTagName("div#idx#idy") // => false
+ *     isValidTagName("^&") // => false
+ */
+const isValidTagName = function (tagName) {
+    const ids = tagName.match(/#/g);
+    // eslint-disable-next-line no-magic-numbers
+    const hasAtMostOneId = !ids || ids.length <= 1;
+    const onlyContainsValidCharacters = /^[1-9a-zA-Z#-.]+$/.test(tagName);
+    const startsSimple = /^[a-zA-Z]/.test(tagName);
+    const endsSimple = /[a-zA-Z1-9-]$/.test(tagName);
+    const hasConsecutive = /\.\.|\.#|#\.|##|#-|#-\.|\.-#/g.test(tagName);
+
+    return startsSimple &&
+        endsSimple &&
+        hasAtMostOneId &&
+        onlyContainsValidCharacters &&
+        !hasConsecutive &&
+        true;
 };
 
 const voidElementLookup = {
@@ -81,8 +169,6 @@ const serializePropValue = function (value) {
 
 /**
  * @example
- *     spreadProps({ class: "b a c" }) // => " class=\"a b c\""
- *     spreadProps({ className: "c a b" }) // => " class=\"a b c\""
  *     spreadProps({ classList: ["b", "a"] }) // => " class=\"a b\""
  *     spreadProps({ c: "d", a: "b" }) // => " a=\"b\" c=\"d\""
  *     spreadProps([]) // => ""
@@ -91,19 +177,18 @@ const serializePropValue = function (value) {
  */
 const spreadProps = function (props) {
     return Object.keys(props).sort().map((key) => {
-        if (key === "class") {
-            return ` class="${props[key].split(" ").sort().join(" ")}"`;
-        }
-
-        if (key === "className") {
-            return ` class="${props[key].split(" ").sort().join(" ")}"`;
-        }
-
-        if (key === "classList") {
-            return ` class="${props[key].sort().join(" ")}"`;
-        }
-
         const value = props[key];
+        if (key === "classList") {
+            if (value.length) {
+                const cssCache = {};
+                // eslint-disable-next-line immutable/no-mutation
+                value.forEach((name) => cssCache[name] = true);
+                return ` class="${Object.keys(cssCache).sort().join(" ")}"`;
+            }
+
+            return "";
+        }
+
         if (isObject(value) || isArray(value)) {
             if (key === "data") {
                 return Object.keys(value).sort().map((name) => {
@@ -146,31 +231,42 @@ const transform = (utils, root) => {
             return "";
         }
 
-        if (isArray(traversable[0])) {
+        if (isArray(traversable[FIRST_ELEMENT])) {
             return compact(traversable).map(traverse).join("");
         }
 
-        const [tagName, props, ...childrenWithoutProps] = traversable;
+        const [tagName, maybeProps, ...childrenWithoutProps] = traversable;
         const [, ...allChildren] = traversable;
-        const hasProps = isObject(props);
+        const hasProps = isObject(maybeProps);
         const children = compact(hasProps ? childrenWithoutProps : allChildren);
 
         if (!tagName) {
             return "";
         }
 
-        if (isVoidElement(tagName)) {
-            return `<${tagName}${hasProps ? spreadProps(props) : ""}/>`;
-        }
-
         if (/\s*!DOCTYPE/.test(tagName)) {
+            // FIXME: Validate doctype structure
             return `<${tagName}>`;
         }
 
-        const subTree = children.map(traverse).join("");
-        const propsString = hasProps ? spreadProps(props) : "";
+        if (!isValidTagName(tagName)) {
+            // TODO: Should we really panic on invalid tag names?
+            throw new Error(`Invalid tag name "${tagName}"`);
+        }
 
-        return `<${tagName}${propsString}>${subTree}</${tagName}>`;
+        const [tag, id, classNames] = extractTagMeta(tagName);
+        const props =
+            assembleProps(id, classNames, hasProps ? maybeProps : {});
+
+        if (isVoidElement(tag)) {
+            const propsString = spreadProps(props);
+            return `<${tag}${propsString}/>`;
+        }
+
+        const subTree = children.map(traverse).join("");
+        const propsString = spreadProps(props);
+
+        return `<${tag}${propsString}>${subTree}</${tag}>`;
     };
 
     return traverse(root);
