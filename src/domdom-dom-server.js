@@ -170,12 +170,17 @@ const serializePropValue = function (value) {
  * @example
  *     spreadProps({ classList: ["b", "a"] }) // => " class=\"a b\""
  *     spreadProps({ c: "d", a: "b" }) // => " a=\"b\" c=\"d\""
+ *     spreadProps({ onClick: () => {} }) // => ""
  *     spreadProps([]) // => ""
  *     spreadProps(/regex/) // => ""
  *     spreadProps(() => {}) // => ""
  */
 const spreadProps = function (props) {
     return Object.keys(props).sort().map((key) => {
+        if (/^on/i.test(key)) {
+            return "";
+        }
+
         const value = props[key];
         if (key === "classList") {
             if (value.length) {

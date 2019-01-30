@@ -387,6 +387,13 @@ describe("domdom-dom-server", () => {
 
             });
 
+            it("should skip serializing 'on*' callback props", () => {
+                expect(render(["button", { onClick: () => {} }]))
+                    .toBe("<button></button>");
+                expect(render(["button", { onMouseUp: () => {} }]))
+                    .toBe("<button></button>");
+            });
+
         });
 
     });
