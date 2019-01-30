@@ -6,6 +6,7 @@ const validateHtml = require("html5-validator");
 
 const DomDom = require("./domdom");
 const DomDomDomServer = require("./domdom-dom-server");
+const DomDomMarkdown = require("./domdom-markdown");
 
 class InvariantViolation extends Error {}
 const noop = () => {};
@@ -162,6 +163,48 @@ describe("domdom", () => {
 
         });
 
+    });
+
+});
+
+describe("domdom-markdown", () => {
+    const t = DomDomMarkdown;
+
+    describe("the 'domdom-markdown' transform", () => {
+
+        it("should be a function with arity 2", () => {
+            expect(typeof t).toBe("function");
+            expect(t).toHaveLength(2);
+        });
+
+        it("should export the proper 'version' string matching the package version", () => {
+            expect(t.version).toBe(pkg.version);
+        });
+
+    });
+
+    it("should render markdown examples to the appropriate domdom expressions", () => {
+        const expr = t(`
+
+# Hello, Markdown
+Some paragraph
+* A list item
+* Another item
+
+* * *
+
+        `);
+        expect(expr).toEqual([
+            "",
+            ["h1", "Hello, Markdown"],
+            ["p", "Some paragraph"],
+            ["ul",
+                ["li", "A list item"],
+                ["li", "Another item"],
+            ],
+            ["hr"],
+        ]);
+        expect(t("Hello, Markdown")).toEqual([["p", "Hello, Markdown"]]);
     });
 
 });

@@ -36,4 +36,18 @@ export default [
             production && terser(terserOptions),
         ],
     },
+    {
+        input: "src/domdom-markdown.js",
+        output: {
+            file: "dist/domdom-markdown.js",
+            format: "umd",
+            name: "DomDomMarkdown",
+            sourcemap: true,
+        },
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            production && terser(terserOptions),
+        ],
+    },
 ];
