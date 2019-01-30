@@ -1,9 +1,22 @@
+const TWO = 2;
 
 const prodUtils = {
     checkEnvironment: (invariant, Arr = Array, Obj = Object) => {
         invariant(
             typeof Arr.isArray === "function",
             "'Array.isArray' is required"
+        );
+        invariant(
+            typeof Arr.prototype.filter === "function",
+            "'Array.prototype.filter' is required"
+        );
+        invariant(
+            typeof Arr.prototype.forEach === "function",
+            "'Array.prototype.forEach' is required"
+        );
+        invariant(
+            typeof Arr.prototype.map === "function",
+            "'Array.prototype.map' is required"
         );
         invariant(
             typeof Obj.keys === "function",
@@ -25,7 +38,7 @@ const configureRenderer = (utils) => {
 
     function render(driver, root) {
         invariant(
-            typeof driver === "function" && driver.length === 2,
+            typeof driver === "function" && driver.length === TWO,
             "Please provide a valid 'driver' into 'render'"
         );
 
