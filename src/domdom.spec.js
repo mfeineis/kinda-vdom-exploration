@@ -418,6 +418,10 @@ describe("domdom-dom-server", () => {
             expect(render(["div", null, false])).toBe("<div></div>");
         });
 
+        it("should be ok with a leading empty string indicating a collection instead of an element", () => {
+            expect(render(["", "Some text"])).toBe("Some text");
+        });
+
         it("should panic if no 'tagName' is given", () => {
             expect(() => render([null, "Some text"])).toThrow();
         });

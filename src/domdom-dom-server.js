@@ -239,6 +239,10 @@ const transform = (utils, root) => {
             return compact(traversable).map(traverse).join("");
         }
 
+        if (traversable[FIRST_ELEMENT] === "") {
+            return compact(traversable).map(traverse).join("");
+        }
+
         const [tagName, maybeProps, ...childrenWithoutProps] = traversable;
         const [, ...allChildren] = traversable;
         const hasProps = isObject(maybeProps);
