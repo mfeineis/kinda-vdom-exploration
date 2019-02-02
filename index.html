@@ -42,7 +42,6 @@
 
     <script src="dist/domdom.js"></script>
     <script src="dist/domdom-dom-server.js"></script>
-    <script src="dist/domdom-markdown.js"></script>
     <script>
 
      const utils = {
@@ -90,20 +89,6 @@
          ["div#some-id.text-color-red.font-weight-bold", "More Bold Red Text"],
      ]);
      makeSample("Using 'data-' props", ["i", { data: { id: "id", key: "key" } }, "id key"]);
-
-     makeSample("Using Markdown", DomDomMarkdown(`
-
-# A Markdown document
-This is a markdown document with __some bold text__
-and a list
-* of this item
-* and another one
-
-## A sub heading
-* [x] with a checked checkbox
-* [ ] with a checkbox
-
-     `));
 
     </script>
 </body>

@@ -30,8 +30,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "true || npm run guard-commit",
-      "pre-push": "true || npm run guard-push"
+      "pre-commit": "npm run guard-commit",
+      "pre-push": "npm run guard-push"
     }
   },
   "repository": {
