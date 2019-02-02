@@ -91,6 +91,17 @@
      ]);
      makeSample("Using 'data-' props", ["i", { data: { id: "id", key: "key" } }, "id key"]);
 
+     function team(props, children) {
+         return [
+             ["span", "Team Avatar"],
+             ["ul"].concat(props.members.map(function (it) { return ["li", it]; })),
+         ].concat(children);
+     }
+
+     makeSample("Using simple code templates",
+        [team, { members: ["Aang", "Katara", "Soka"] }, "Iro", "Zuko"]
+     );
+
     </script>
 </body>
 </html>

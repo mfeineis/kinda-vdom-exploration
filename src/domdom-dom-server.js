@@ -70,8 +70,13 @@ const compact = function (it) {
  *     extractTagMeta("div.cls-a.cls-b") // => ["div", "", ["cls-a", "cls-b"]]
  *     extractTagMeta("i#idx.some-class.fx42")
  *     // => ["i", "idx", ["some-class", "fx42"]]
+ *     extractTagMeta(extractTagMeta) // => [extractTagMeta, "", []]
  */
 const extractTagMeta = function (tagName) {
+    if (isFunction(tagName)) {
+        return [tagName, "", []];
+    }
+
     const tag = tagName.match(/^[^.#]+/)[FIRST_ELEMENT];
     const id = (tagName.match(/#[^.]+/) || [""])[FIRST_ELEMENT]
         .replace("#", "");
@@ -82,6 +87,21 @@ const extractTagMeta = function (tagName) {
 };
 
 const isArray = Array.isArray;
+
+/**
+ * @example
+ *     isFunction(() => {}) // => true
+ *     isFunction(function () {}) // => true
+ *     isFunction(/regex/) // => false
+ *     isFunction({}) // => false
+ *     isFunction(null) // => false
+ *     isFunction(true) // => false
+ *     isFunction(false) // => false
+ *     isFunction(42) // => false
+ */
+const isFunction = function (it) {
+    return typeof it === "function";
+};
 
 /**
  * @example
@@ -130,6 +150,10 @@ const isString = function (it) {
  *     isValidTagName("^&") // => false
  */
 const isValidTagName = function (tagName) {
+    if (isFunction(tagName)) {
+        return true;
+    }
+
     const ids = (tagName || "").match(/#/g);
     // eslint-disable-next-line no-magic-numbers
     const hasAtMostOneId = !ids || ids.length <= 1;
@@ -274,6 +298,10 @@ const transform = (utils, root) => {
         const [tag, id, classNames] = extractTagMeta(tagName);
         const props =
             assembleProps(id, classNames, hasProps ? maybeProps : {});
+
+        if (isFunction(tag)) {
+            return traverse(tag.call(null, props, children));
+        }
 
         if (isVoidElement(tag)) {
             const propsString = spreadProps(props);

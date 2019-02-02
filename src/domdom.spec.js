@@ -534,5 +534,32 @@ describe("domdom-dom-server", () => {
 
     });
 
+    describe("using code templates", () => {
+
+        it("should support functions acting as templates simple templates", () => {
+
+            function tmpl(props, children) {
+                expect(typeof props).toBe("object");
+                expect(children).toEqual(["Text1", "Text2"]);
+
+                const { items } = props;
+                expect(items).toEqual(["a", "b"]);
+
+                return [
+                    ["ul",
+                        ...items.map((id) => ["li", {
+                            data: { id },
+                        }, id]),
+                    ],
+                    ...children,
+                ];
+            }
+
+            expect(render([tmpl, { items: ["a", "b"] }, "Text1", "Text2"]))
+                .toBe("<ul><li data-id=\"a\">a</li><li data-id=\"b\">b</li></ul>Text1Text2");
+        });
+
+    });
+
 });
 
