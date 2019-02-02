@@ -2,20 +2,21 @@ const TWO = 2;
 
 const prodUtils = {
     checkEnvironment: (invariant, Arr = Array, Obj = Object) => {
+        const ArrayProto = Arr.prototype;
         invariant(
             typeof Arr.isArray === "function",
             "'Array.isArray' is required"
         );
         invariant(
-            typeof Arr.prototype.filter === "function",
+            typeof ArrayProto.filter === "function",
             "'Array.prototype.filter' is required"
         );
         invariant(
-            typeof Arr.prototype.forEach === "function",
+            typeof ArrayProto.forEach === "function",
             "'Array.prototype.forEach' is required"
         );
         invariant(
-            typeof Arr.prototype.map === "function",
+            typeof ArrayProto.map === "function",
             "'Array.prototype.map' is required"
         );
         invariant(
