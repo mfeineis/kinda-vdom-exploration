@@ -82,6 +82,7 @@
 
      makeSample("Using CSS", [
         ["div", { "class": "text-color-red" }, "Red Text"],
+        ["div", { "class": { "text-color-red": true } }, "Red Text"],
         ["div", { className: "font-weight-bold" }, "Bold Text"],
         ["div", { classList: ["text-color-red", "font-weight-bold"] }, "Bold Red Text"],
      ]);
