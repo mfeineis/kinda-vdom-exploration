@@ -1076,10 +1076,10 @@ Parser.prototype.tok = function() {
         return this.renderer.table(header, body);
     }
     case "blockquote_start": {
-        body = "";
+        body = [];
 
         while (this.next().type !== "blockquote_end") {
-            body += this.tok();
+            body.push(this.tok());
         }
 
         return this.renderer.blockquote(body);
@@ -1515,9 +1515,9 @@ proto.blockquote = (quote) => ["blockquote", ...quote];
 proto.br = () => ["br"];
 proto.checkbox = (checked) => {
     if (checked) {
-        return [["input", { checked: "checked", disabled: true, type: "checkbox" }]];
+        return [["input", { checked: "checked", disabled: "disabled", type: "checkbox" }]];
     }
-    return [["input", { disabled: true, type: "checkbox" }]];
+    return [["input", { disabled: "disabled", type: "checkbox" }]];
 };
 proto.code = function (code, infostring, escaped) {
     const lang = (infostring || "").match(/\S*/)[0];
@@ -1560,6 +1560,9 @@ proto.link = function (href, title, text) {
     if (href === null) {
         return text;
     }
+    if (!title) {
+        return ["a", { href: escape(href) }, ...text];
+    }
     return ["a", { href: escape(href), title }, ...text];
 };
 proto.list = (body, ordered, start) => {
@@ -1568,7 +1571,7 @@ proto.list = (body, ordered, start) => {
     }
     return [ordered ? "ol" : "ul", ...body];
 };
-proto.listitem = ([text]) => ["li", ...text];
+proto.listitem = (text) => ["li", ...text];
 proto.paragraph = (text) => ["p", ...text];
 proto.strong = (text) => ["strong", ...text];
 proto.table = (header, body) => {
