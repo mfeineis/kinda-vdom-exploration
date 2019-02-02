@@ -20,10 +20,23 @@ const assembleProps = function (id, classNames, props) {
         props.id = id;
     }
 
-    // eslint-disable-next-line immutable/no-let
-    let classList = classNames.concat(props.classList || []);
 
-    if (props.class) {
+    // eslint-disable-next-line immutable/no-let
+    let classList = classNames;
+
+    if (isObject(props.class)) {
+        const truthyValuedKeys = Object.keys(props.class).filter(
+            (name) => props.class[name]
+        );
+        classList = classList.concat(truthyValuedKeys);
+        delete props.class;
+    }
+
+    if (isArray(props.classList)) {
+        classList = classList.concat(props.classList);
+    }
+
+    if (isString(props.class)) {
         classList = classList.concat(props.class.split(" "));
         delete props.class;
     }

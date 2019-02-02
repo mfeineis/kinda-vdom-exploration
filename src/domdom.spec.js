@@ -319,11 +319,16 @@ describe("domdom-dom-server", () => {
 
             describe("'class', 'className' and 'classList'", () => {
 
-                it("should support strings for 'class' and 'className' prop", () => {
+                it("should support strings for 'class' and 'className' props", () => {
                     expect(render(["i", { class: "a b c" }]))
                         .toBe("<i class=\"a b c\"></i>");
                     expect(render(["i", { className: "a b c" }]))
                         .toBe("<i class=\"a b c\"></i>");
+                });
+
+                it("should support a map for 'class' prop where keys with truthy values become classes", () => {
+                    expect(render(["i", { class: { a: false, b: true, c: 0 } }]))
+                        .toBe("<i class=\"b\"></i>");
                 });
 
                 it("should support list of strings for 'classList' prop", () => {
