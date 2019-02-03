@@ -23,6 +23,20 @@ export default [
         ],
     },
     {
+        input: "src/domdom-dom.js",
+        output: {
+            file: "dist/domdom-dom.js",
+            format: "umd",
+            name: "DomDomDom",
+            sourcemap: true,
+        },
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            production && terser(terserOptions),
+        ],
+    },
+    {
         input: "src/domdom-dom-server.js",
         output: {
             file: "dist/domdom-dom-server.js",

@@ -41,6 +41,7 @@
     <div id="root"></div>
 
     <script src="dist/domdom.js"></script>
+    <script src="dist/domdom-dom.js"></script>
     <script src="dist/domdom-dom-server.js"></script>
     <script>
 
@@ -101,6 +102,18 @@
      makeSample("Using simple code templates",
         [team, { members: ["Aang", "Katara", "Soka"] }, "Iro", "Zuko"]
      );
+
+     {
+        const node = document.createElement("div");
+        const expr = ["span", "Hello, real DOM!"];
+        render(DomDomDom, expr, node);
+
+        const pre = document.createElement("pre");
+        pre.innerText = render(DomDomDomServer, expr);
+        node.appendChild(pre);
+
+        document.body.appendChild(node);
+     }
 
     </script>
 </body>
