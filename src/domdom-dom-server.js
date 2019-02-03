@@ -148,6 +148,7 @@ const driver = () => {
 
     return {
         isSpecialTag,
+        reduce: (nodes) => nodes.join(""),
         visit,
     };
 };

@@ -219,13 +219,15 @@ const configureRenderer = (utils) => {
         }
 
         if (isArray(expr[FIRST_ELEMENT])) {
-            return compact(expr)
-                .map((it) => traverse(driver, it)).join("");
+            return driver.reduce(
+                compact(expr).map((it) => traverse(driver, it))
+            );
         }
 
         if (expr[FIRST_ELEMENT] === "") {
-            return compact(expr)
-                .map((it) => traverse(driver, it)).join("");
+            return driver.reduce(
+                compact(expr).map((it) => traverse(driver, it))
+            );
         }
 
         const [tagName, maybeProps, ...childrenWithoutProps] = expr;
