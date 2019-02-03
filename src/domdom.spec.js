@@ -3,7 +3,6 @@
 const pkg = require("../package.json");
 
 const DomDom = require("./domdom");
-const DomDomDomServer = require("./domdom-dom-server");
 
 class InvariantViolation extends Error {}
 const noop = () => {};
@@ -105,6 +104,10 @@ describe("domdom", () => {
     });
 
     describe("the 'configureRenderer' factory", () => {
+        const identityDriver = () => ({
+            isSpecialTag: () => false,
+            visit: (expr) => (children) => [expr, ...children],
+        });
         const utils = makeTestUtils();
         const { configureRenderer } = DomDom;
 
@@ -126,7 +129,7 @@ describe("domdom", () => {
         });
 
         it("should return a 'render' function", () => {
-            const render = configureRenderer(utils, {});
+            const render = configureRenderer(utils);
 
             expect(render).toBeInstanceOf(Function);
             expect(render.name).toBe("render");
@@ -134,7 +137,7 @@ describe("domdom", () => {
 
         describe("a configured 'render' function", () => {
 
-            it("should check the given 'driver' and 'root'", () => {
+            it("should check the given 'driver' and 'expr'" ,() => {
                 const report = jest.fn();
                 const tracingUtils = makeTestUtils(report);
                 const render = configureRenderer(tracingUtils);
@@ -143,19 +146,72 @@ describe("domdom", () => {
                 expect(report.mock.calls[0][0])
                     .toBe("Please provide a valid 'driver' into 'render'");
 
-                expect(() => render(DomDomDomServer))
+                expect(() => render(identityDriver))
                     .toThrow(InvariantViolation);
                 expect(report.mock.calls[1][0])
-                    .toBe("Please provide a valid root element");
+                    .toBe("Please provide a valid expression");
             });
 
             it("should use the given 'driver' to transform the input", () => {
-                const identityDriver = (_, root) => root;
 
                 const render = configureRenderer(utils);
 
                 expect(render(identityDriver, ["div", "Hello, World!"]))
                     .toEqual(["div", "Hello, World!"]);
+            });
+
+        });
+
+        describe("'tagName' features", () => {
+            const baseRender = configureRenderer(utils);
+            const render = (expr) => baseRender(identityDriver, expr);
+
+            it("should reject invalid characters by panicking", () => {
+                expect(() => render(["ä"])).toThrow();
+                expect(() => render(["/"])).toThrow();
+                expect(() => render(["\\"])).toThrow();
+            });
+
+            it("should reject invalid characters by panicing", () => {
+                expect(() => render(["ä"])).toThrow();
+                expect(() => render(["/"])).toThrow();
+                expect(() => render(["\\"])).toThrow();
+            });
+
+            it("should reject malformed tag names", () => {
+                expect(() => render([".#"])).toThrow();
+                expect(() => render(["-.#"])).toThrow();
+                expect(() => render(["div.#"])).toThrow();
+                expect(() => render(["div#."])).toThrow();
+                expect(() => render(["div#.."])).toThrow();
+                expect(() => render(["div#asdf."])).toThrow();
+                expect(() => render(["div."])).toThrow();
+                expect(() => render(["div.asdf#"])).toThrow();
+                expect(() => render(["div.asdf-#-"])).toThrow();
+            });
+
+            it("should make sure that at most one '#' is accepted", () => {
+                expect(() => render(["div#id1#id2"])).toThrow();
+            });
+
+            it("should panic if more than one id is supplied via tag and prop", () => {
+                expect(() => render(["div#idx", { id: "idy" }])).toThrow();
+            });
+
+        });
+
+        describe("handling simple edge cases", () => {
+            const baseRender = configureRenderer(utils);
+            const render = (expr) => baseRender(identityDriver, expr);
+
+            it("should not be fine with trying to render nothing", () => {
+                expect(() => render([])).toThrow();
+                expect(() => render([[]])).toThrow();
+                expect(() => render([[[]]])).toThrow();
+            });
+
+            it("should panic if no 'tagName' is given", () => {
+                expect(() => render([null, "Some text"])).toThrow();
             });
 
         });

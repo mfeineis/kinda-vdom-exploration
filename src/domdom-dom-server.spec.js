@@ -35,9 +35,9 @@ describe("domdom-dom-server", () => {
 
     describe("the 'domdom-dom-server' driver", () => {
 
-        it("should be a function with arity 2", () => {
+        it("should be a function with arity 0", () => {
             expect(typeof driver).toBe("function");
-            expect(driver).toHaveLength(2);
+            expect(driver).toHaveLength(0);
         });
 
         it("should export the proper 'version' string matching the package version", () => {
@@ -49,7 +49,7 @@ describe("domdom-dom-server", () => {
     describe("rendering easy static examples", () => {
 
         it("should render the simplest helloworld", () => {
-            expect(render( "Hello, World!"))
+            expect(render("Hello, World!"))
                 .toEqual("Hello, World!");
         });
 
@@ -80,34 +80,8 @@ describe("domdom-dom-server", () => {
             expect(render(["script"])).toBe("<script></script>");
         });
 
-        it("should reject invalid characters by panicing", () => {
-            expect(() => render(["ä"])).toThrow();
-            expect(() => render(["/"])).toThrow();
-            expect(() => render(["\\"])).toThrow();
-        });
-
-        it("should reject malformed tag names", () => {
-            expect(() => render([".#"])).toThrow();
-            expect(() => render(["-.#"])).toThrow();
-            expect(() => render(["div.#"])).toThrow();
-            expect(() => render(["div#."])).toThrow();
-            expect(() => render(["div#.."])).toThrow();
-            expect(() => render(["div#asdf."])).toThrow();
-            expect(() => render(["div."])).toThrow();
-            expect(() => render(["div.asdf#"])).toThrow();
-            expect(() => render(["div.asdf-#-"])).toThrow();
-        });
-
         it("should support adding an id via '#' emmet like syntax", () => {
             expect(render(["div#some-id"])).toBe("<div id=\"some-id\"></div>");
-        });
-
-        it("should make sure that at most one '#' is accepted", () => {
-            expect(() => render(["div#id1#id2"])).toThrow();
-        });
-
-        it("should panic if more than one id is supplied via tag and prop", () => {
-            expect(() => render(["div#idx", { id: "idy" }])).toThrow();
         });
 
         it("should support adding CSS classes via '.' emmet like syntax", () => {
@@ -269,12 +243,6 @@ describe("domdom-dom-server", () => {
             expect(render(["!DOCTYPE html"])).toBe("<!DOCTYPE html>");
         });
 
-        it("should not be fine with trying to render nothing", () => {
-            expect(() => render([])).toThrow();
-            expect(() => render([[]])).toThrow();
-            expect(() => render([[[]]])).toThrow();
-        });
-
         it("should output elements without content", () => {
             expect(render(["div"])).toBe("<div></div>");
             expect(render(["div", null])).toBe("<div></div>");
@@ -285,10 +253,6 @@ describe("domdom-dom-server", () => {
 
         it("should be ok with a leading empty string indicating a collection instead of an element", () => {
             expect(render(["", "Some text"])).toBe("Some text");
-        });
-
-        it("should panic if no 'tagName' is given", () => {
-            expect(() => render([null, "Some text"])).toThrow();
         });
 
     });

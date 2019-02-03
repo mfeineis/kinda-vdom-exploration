@@ -26,6 +26,17 @@ const makeTestUtils = (reportViolation = noop, checkEnv = noop) => {
     };
 };
 
+const range = (count, step = 1) => {
+    const result = [];
+    // eslint-disable-next-line immutable/no-let
+    let i = 0;
+    while (i < count) {
+        result.push(i * step);
+        i += 1;
+    }
+    return result;
+};
+
 describe("domdom-dom", () => {
     const { configureRenderer } = DomDom;
     const utils = makeTestUtils();
@@ -35,9 +46,9 @@ describe("domdom-dom", () => {
 
     describe("the 'domdom-dom' driver", () => {
 
-        it("should be a function with arity 3", () => {
+        it("should be a function with arity 2", () => {
             expect(typeof driver).toBe("function");
-            expect(driver).toHaveLength(3);
+            expect(driver).toHaveLength(2);
         });
 
         it("should export the proper 'version' string matching the package version", () => {
@@ -56,7 +67,7 @@ describe("domdom-dom", () => {
             expect(() => render({ ownerDocument: { createElement: 1 } }, ["div"]))
                 .toThrow(TypeError);
             expect(() => render({ ownerDocument: { createElement: jest.fn() } }, []))
-                .not.toThrow();
+                .toThrow();
         });
 
         it("should check that the given 'expr' is valid", () => {
@@ -66,10 +77,6 @@ describe("domdom-dom", () => {
             expect(() => render(
                 { ownerDocument: { createElement: jest.fn() } },
                 {}
-            )).toThrow(InvariantViolation);
-            expect(() => render(
-                { ownerDocument: { createElement: jest.fn() } },
-                "Boom!"
             )).toThrow(InvariantViolation);
             expect(() => render(
                 { ownerDocument: { createElement: jest.fn() } },
@@ -113,18 +120,16 @@ describe("domdom-dom", () => {
                         {
                             appendChild: state.createdNodes[0].appendChild,
                             nodeName: expr[0],
-                            //NodeType: ELEMENT_NODE,
                             ownerDocument: root.ownerDocument,
                         },
                         {
-                            //NodeType: TEXT_NODE,
                             ownerDocument: root.ownerDocument,
                             textContent: expr[1],
                         },
                     ]);
 
                     expect(state.createdNodes).toHaveLength(2);
-                    expect(state.createdNodes[0]).toBe(state.appendedNodes[1]);
+                    expect(state.createdNodes[0]).toBe(state.appendedNodes[0]);
                 };
 
                 it("should append a simple <div> into the given 'root'", () => {
@@ -137,6 +142,29 @@ describe("domdom-dom", () => {
 
                 it("should append a another <b> into the given 'root'", () => {
                     checkSimpleCase(["b", "Bold"]);
+                });
+
+            });
+
+            describe("rendering flat expressions", () => {
+
+                it("should be able to render expressions with many text children", () => {
+                    const [root, state] = makeRoot();
+                    const labels = range(42).map((n) => `x${n}`);
+
+                    render(root, ["div", ...labels]);
+
+                    expect(state.createdNodes).toEqual([
+                        {
+                            appendChild: state.createdNodes[0].appendChild,
+                            nodeName: "div",
+                            ownerDocument: root.ownerDocument,
+                        },
+                        ...labels.map((textContent) => ({
+                            ownerDocument: root.ownerDocument,
+                            textContent,
+                        })),
+                    ]);
                 });
 
             });
@@ -157,7 +185,6 @@ describe("domdom-dom", () => {
                         state.appendedNodes.push(child);
                     },
                     nodeName,
-                    //NodeType: ELEMENT_NODE,
                     ownerDocument,
                 });
                 state.createdNodes.push(node);
@@ -165,7 +192,6 @@ describe("domdom-dom", () => {
             },
             createTextNode: (textContent) => {
                 const node = Object.freeze({
-                    //NodeType: TEXT_NODE,
                     ownerDocument,
                     textContent,
                 });

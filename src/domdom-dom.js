@@ -1,8 +1,15 @@
 
-const SECOND = 1;
-const FIRST = 0;
+/**
+ * @example
+ *     isSpecialTag("!DOCTYPE html") // => true
+ *     isSpecialTag("   !DOCTYPE html") // => true
+ *     isSpecialTag("!DOCTYPE") // => false
+ */
+const isSpecialTag = function (tagName) {
+    return /\s*!DOCTYPE\s+[^\s]+/.test(tagName);
+};
 
-const transform = (utils, expr, root) => {
+const driver = (utils, root) => {
     const { invariant } = utils;
 
     invariant(
@@ -10,25 +17,28 @@ const transform = (utils, expr, root) => {
         "Please supply a valid root node"
     );
 
-    invariant(
-        expr && Array.isArray(expr),
-        "Please supply a valid expression"
-    );
+    const visit = (tag) => {
 
-    if (!expr || expr.length === FIRST) {
-        return;
-    }
+        const document = root.ownerDocument;
+        const child = document.createElement(tag);
+        root.appendChild(child);
 
-    const document = root.ownerDocument;
-    const child = document.createElement(expr[FIRST]);
-    child.appendChild(document.createTextNode(expr[SECOND]));
+        return (children) => {
+            children.forEach((it) => {
+                child.appendChild(document.createTextNode(it));
+            });
+        };
+    };
 
-    root.appendChild(child);
+    return {
+        isSpecialTag,
+        visit,
+    };
 };
 
 // eslint-disable-next-line immutable/no-mutation
-transform.version = "0.1.0";
+driver.version = "0.1.0";
 
 // FIXME: Make this eslint rule work with `module.exports`
 // eslint-disable-next-line immutable/no-mutation
-module.exports = transform;
+module.exports = driver;

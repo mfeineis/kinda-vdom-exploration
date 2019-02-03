@@ -1,107 +1,5 @@
-const FIRST_ELEMENT = 0;
-
-/**
- * @example
- *     assembleProps("a", [], {}) // => { id: "a" }
- *     assembleProps("a", ["X"], { class: "Y" })
- *     // => { id: "a", classList: ["X", "Y"] }
- *     assembleProps("", ["X"], { className: "Y" })
- *     // => { classList: ["X", "Y"] }
- *     assembleProps("", ["X"], { class: "Z", className: "Y" })
- *     // => { classList: ["X", "Z", "Y"] }
- */
-const assembleProps = function (id, classNames, props) {
-    if (id) {
-        if (props.id) {
-            throw new Error(`Multiple IDs "${id}"/${props.id} provided`);
-        }
-
-        // eslint-disable-next-line immutable/no-mutation
-        props.id = id;
-    }
-
-
-    // eslint-disable-next-line immutable/no-let
-    let classList = classNames;
-
-    if (isObject(props.class)) {
-        const truthyValuedKeys = Object.keys(props.class).filter(
-            (name) => props.class[name]
-        );
-        classList = classList.concat(truthyValuedKeys);
-        delete props.class;
-    }
-
-    if (isArray(props.classList)) {
-        classList = classList.concat(props.classList);
-    }
-
-    if (isString(props.class)) {
-        classList = classList.concat(props.class.split(" "));
-        delete props.class;
-    }
-
-    if (props.className) {
-        classList = classList.concat(props.className.split(" "));
-        delete props.className;
-    }
-
-    if (classList.length) {
-        // eslint-disable-next-line immutable/no-mutation
-        props.classList = classList;
-    }
-
-    return props;
-};
-
-/**
- * @example
- *     compact([1, null, 2, false, undefined, 3]) // => [1, 2, 3]
- */
-const compact = function (it) {
-    // FIXME: `jsdoctest` doesn't recognize arrow syntax apparently
-    return it.filter(Boolean);
-};
-
-/**
- * @example
- *     extractTagMeta("div") // => ["div", "", []]
- *     extractTagMeta("div#some-id") // => ["div", "some-id", []]
- *     extractTagMeta("div.cls-a.cls-b") // => ["div", "", ["cls-a", "cls-b"]]
- *     extractTagMeta("i#idx.some-class.fx42")
- *     // => ["i", "idx", ["some-class", "fx42"]]
- *     extractTagMeta(extractTagMeta) // => [extractTagMeta, "", []]
- */
-const extractTagMeta = function (tagName) {
-    if (isFunction(tagName)) {
-        return [tagName, "", []];
-    }
-
-    const tag = tagName.match(/^[^.#]+/)[FIRST_ELEMENT];
-    const id = (tagName.match(/#[^.]+/) || [""])[FIRST_ELEMENT]
-        .replace("#", "");
-    const classNames = (tagName.match(/\.[^.#]+/g) || []).map((cls) => {
-        return cls.replace(".", "");
-    });
-    return [tag, id, classNames];
-};
 
 const isArray = Array.isArray;
-
-/**
- * @example
- *     isFunction(() => {}) // => true
- *     isFunction(function () {}) // => true
- *     isFunction(/regex/) // => false
- *     isFunction({}) // => false
- *     isFunction(null) // => false
- *     isFunction(true) // => false
- *     isFunction(false) // => false
- *     isFunction(42) // => false
- */
-const isFunction = function (it) {
-    return typeof it === "function";
-};
 
 /**
  * @example
@@ -126,6 +24,16 @@ const isObject = function (it) {
 
 /**
  * @example
+ *     isSpecialTag("!DOCTYPE html") // => true
+ *     isSpecialTag("   !DOCTYPE html") // => true
+ *     isSpecialTag("!DOCTYPE") // => false
+ */
+const isSpecialTag = function (tagName) {
+    return /\s*!DOCTYPE\s+[^\s]+/.test(tagName);
+};
+
+/**
+ * @example
  *     isString("A real hero") // => true
  *     isString("") // => true
  *     isString({}) // => false
@@ -136,37 +44,6 @@ const isObject = function (it) {
  */
 const isString = function (it) {
     return typeof it === "string";
-};
-
-/**
- * @example
- *     isValidTagName("div") // => true
- *     isValidTagName("div#idx") // => true
- *     isValidTagName("div.shiny.text-size-large") // => true
- *     isValidTagName("x-tag") // => true
- *     isValidTagName("my-custom-elem-v1") // => true
- *     isValidTagName("my-elem1") // => true
- *     isValidTagName("div#idx#idy") // => false
- *     isValidTagName("^&") // => false
- */
-const isValidTagName = function (tagName) {
-    if (isFunction(tagName)) {
-        return true;
-    }
-
-    const ids = (tagName || "").match(/#/g);
-    // eslint-disable-next-line no-magic-numbers
-    const hasAtMostOneId = !ids || ids.length <= 1;
-    const onlyContainsValidCharacters = /^[1-9a-zA-Z#-.]+$/.test(tagName);
-    const startsSimple = /^[a-zA-Z]/.test(tagName);
-    const endsSimple = /[a-zA-Z1-9-]$/.test(tagName);
-    const hasConsecutive = /\.\.|\.#|#\.|##|#-|#-\.|\.-#/g.test(tagName);
-
-    return startsSimple &&
-        endsSimple &&
-        hasAtMostOneId &&
-        onlyContainsValidCharacters &&
-        !hasConsecutive;
 };
 
 const voidElementLookup = {
@@ -249,58 +126,12 @@ const spreadProps = function (props) {
     }).join("");
 };
 
-const transform = (utils, root) => {
-    const { invariant } = utils;
+const driver = () => {
 
-    invariant(
-        utils && utils.invariant && utils.trace,
-        "Please provide valid utils"
-    );
-    invariant(
-        isString(root) || isArray(root),
-        "Please provide a valid root element"
-    );
-
-    // FIXME: Remove Recursion!
-    const traverse = (traversable) => {
-
-        if (isString(traversable)) {
-            return traversable;
-        }
-
-        if (!isArray(traversable)) {
-            return "";
-        }
-
-        if (isArray(traversable[FIRST_ELEMENT])) {
-            return compact(traversable).map(traverse).join("");
-        }
-
-        if (traversable[FIRST_ELEMENT] === "") {
-            return compact(traversable).map(traverse).join("");
-        }
-
-        const [tagName, maybeProps, ...childrenWithoutProps] = traversable;
-        const [, ...allChildren] = traversable;
-        const hasProps = isObject(maybeProps);
-        const children = compact(hasProps ? childrenWithoutProps : allChildren);
-
-        if (/\s*!DOCTYPE/.test(tagName)) {
+    const visit = (tag, props) => {
+        if (isSpecialTag(tag)) {
             // FIXME: Validate doctype structure
-            return `<${tagName}>`;
-        }
-
-        if (!isValidTagName(tagName)) {
-            // TODO: Should we really panic on invalid tag names?
-            throw new Error(`Invalid tag name "${tagName}"`);
-        }
-
-        const [tag, id, classNames] = extractTagMeta(tagName);
-        const props =
-            assembleProps(id, classNames, hasProps ? maybeProps : {});
-
-        if (isFunction(tag)) {
-            return traverse(tag.call(null, props, children));
+            return `<${tag}>`;
         }
 
         if (isVoidElement(tag)) {
@@ -308,19 +139,23 @@ const transform = (utils, root) => {
             return `<${tag}${propsString}/>`;
         }
 
-        const subTree = children.map(traverse).join("");
         const propsString = spreadProps(props);
 
-        return `<${tag}${propsString}>${subTree}</${tag}>`;
+        return (children) => {
+            return `<${tag}${propsString}>${children.join("")}</${tag}>`;
+        };
     };
 
-    return traverse(root);
+    return {
+        isSpecialTag,
+        visit,
+    };
 };
 
 // eslint-disable-next-line immutable/no-mutation
-transform.version = "0.1.0";
+driver.version = "0.1.0";
 
 // FIXME: Make this eslint rule work with `module.exports`
 // eslint-disable-next-line immutable/no-mutation
-module.exports = transform;
+module.exports = driver;
 
