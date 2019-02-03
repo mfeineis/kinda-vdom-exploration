@@ -1,4 +1,5 @@
 const TWO = 2;
+const THREE = 3;
 
 const prodUtils = {
     checkEnvironment: (invariant, Arr = Array, Obj = Object) => {
@@ -37,13 +38,14 @@ const configureRenderer = (utils) => {
 
     checkEnvironment(invariant);
 
-    function render(driver, root) {
+    function render(driver, expr, root) {
         invariant(
-            typeof driver === "function" && driver.length === TWO,
+            typeof driver === "function" &&
+                (driver.length === TWO || driver.length === THREE),
             "Please provide a valid 'driver' into 'render'"
         );
 
-        return driver(utils, root);
+        return driver(utils, expr, root);
     }
 
     return render;
