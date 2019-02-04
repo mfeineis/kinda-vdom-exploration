@@ -105,8 +105,17 @@ describe("domdom", () => {
 
     describe("the 'configureRenderer' factory", () => {
         const identityDriver = () => ({
-            isSpecialTag: () => false,
-            visit: (expr) => (children) => [expr, ...children],
+            isSpecialTag: () => [false],
+            visit: (expr, _, nodeType) => {
+                switch (nodeType) {
+                case 1:
+                    return (children) => [expr, ...children];
+                case 3:
+                    return expr;
+                default:
+                    throw new Error(`Unsupported 'nodeType' ${nodeType}`);
+                }
+            },
         });
         const utils = makeTestUtils();
         const { configureRenderer } = DomDom;
@@ -156,46 +165,8 @@ describe("domdom", () => {
 
                 const render = configureRenderer(utils);
 
-                expect(render(identityDriver, ["div", "Hello, World!"]))
-                    .toEqual(["div", "Hello, World!"]);
-            });
-
-        });
-
-        describe("'tagName' features", () => {
-            const baseRender = configureRenderer(utils);
-            const render = (expr) => baseRender(identityDriver, expr);
-
-            it("should reject invalid characters by panicking", () => {
-                expect(() => render(["ä"])).toThrow();
-                expect(() => render(["/"])).toThrow();
-                expect(() => render(["\\"])).toThrow();
-            });
-
-            it("should reject invalid characters by panicing", () => {
-                expect(() => render(["ä"])).toThrow();
-                expect(() => render(["/"])).toThrow();
-                expect(() => render(["\\"])).toThrow();
-            });
-
-            it("should reject malformed tag names", () => {
-                expect(() => render([".#"])).toThrow();
-                expect(() => render(["-.#"])).toThrow();
-                expect(() => render(["div.#"])).toThrow();
-                expect(() => render(["div#."])).toThrow();
-                expect(() => render(["div#.."])).toThrow();
-                expect(() => render(["div#asdf."])).toThrow();
-                expect(() => render(["div."])).toThrow();
-                expect(() => render(["div.asdf#"])).toThrow();
-                expect(() => render(["div.asdf-#-"])).toThrow();
-            });
-
-            it("should make sure that at most one '#' is accepted", () => {
-                expect(() => render(["div#id1#id2"])).toThrow();
-            });
-
-            it("should panic if more than one id is supplied via tag and prop", () => {
-                expect(() => render(["div#idx", { id: "idy" }])).toThrow();
+                const result = render(identityDriver, ["div", "Hello, World!"]);
+                expect(result).toEqual(["div", "Hello, World!"]);
             });
 
         });

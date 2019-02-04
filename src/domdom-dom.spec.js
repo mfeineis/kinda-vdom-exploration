@@ -57,6 +57,42 @@ describe("domdom-dom", () => {
 
     });
 
+    describe("DOM 'tagName' features", () => {
+
+        it("should reject invalid characters by panicking", () => {
+            expect(() => render(["ä"])).toThrow();
+            expect(() => render(["/"])).toThrow();
+            expect(() => render(["\\"])).toThrow();
+        });
+
+        it("should reject invalid characters by panicing", () => {
+            expect(() => render(["ä"])).toThrow();
+            expect(() => render(["/"])).toThrow();
+            expect(() => render(["\\"])).toThrow();
+        });
+
+        it("should reject malformed tag names", () => {
+            expect(() => render([".#"])).toThrow();
+            expect(() => render(["-.#"])).toThrow();
+            expect(() => render(["div.#"])).toThrow();
+            expect(() => render(["div#."])).toThrow();
+            expect(() => render(["div#.."])).toThrow();
+            expect(() => render(["div#asdf."])).toThrow();
+            expect(() => render(["div."])).toThrow();
+            expect(() => render(["div.asdf#"])).toThrow();
+            expect(() => render(["div.asdf-#-"])).toThrow();
+        });
+
+        it("should make sure that at most one '#' is accepted", () => {
+            expect(() => render(["div#id1#id2"])).toThrow();
+        });
+
+        it("should panic if more than one id is supplied via tag and prop", () => {
+            expect(() => render(["div#idx", { id: "idy" }])).toThrow();
+        });
+
+    });
+
     describe("simple examples", () => {
 
         it("should check that the given 'root' has an 'ownerDocument' property", () => {
@@ -131,6 +167,19 @@ describe("domdom-dom", () => {
                     expect(state.createdNodes).toHaveLength(2);
                     expect(state.createdNodes[0]).toBe(state.appendedNodes[0]);
                 };
+
+                it("should support rendering a plain string", () => {
+                    const [root, state] = makeRoot();
+
+                    render(root, "Simple String");
+
+                    expect(state.createdNodes).toEqual([
+                        {
+                            ownerDocument: root.ownerDocument,
+                            textContent: "Simple String",
+                        },
+                    ]);
+                });
 
                 it("should append a simple <div> into the given 'root'", () => {
                     checkSimpleCase(["div", "Hello, World!"]);

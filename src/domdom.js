@@ -1,3 +1,15 @@
+const {
+    ELEMENT_NODE,
+    TEXT_NODE,
+    DOCUMENT_TYPE_NODE,
+} = require("./constants");
+const {
+    isArray,
+    isFunction,
+    isObject,
+    isString,
+} = require("./utils");
+
 const FIRST_ELEMENT = 0;
 const TWO = 2;
 
@@ -87,89 +99,6 @@ const extractTagMeta = function (tagName) {
     return [tag, id, classNames];
 };
 
-const isArray = Array.isArray;
-
-/**
- * @example
- *     isFunction(() => {}) // => true
- *     isFunction(function () {}) // => true
- *     isFunction(/regex/) // => false
- *     isFunction({}) // => false
- *     isFunction(null) // => false
- *     isFunction(true) // => false
- *     isFunction(false) // => false
- *     isFunction(42) // => false
- */
-const isFunction = function (it) {
-    return typeof it === "function";
-};
-
-/**
- * @example
- *     isObject({}) // => true
- *     isObject(Object) // => false
- *     isObject(() => {}) // => false
- *     isObject(function () {}) // => false
- *     isObject([]) // => false
- *     isObject(/regex/) // => false
- *     isObject(null) // => false
- *     isObject(undefined) // => false
- *     isObject("Not an object") // => false
- *     isObject(0) // => false
- *     isObject(42) // => false
- */
-const isObject = function (it) {
-    return !isArray(it) &&
-        typeof it === "object" &&
-        it !== null &&
-        !(it instanceof RegExp);
-};
-
-/**
- * @example
- *     isString("A real hero") // => true
- *     isString("") // => true
- *     isString({}) // => false
- *     isString(null) // => false
- *     isString(undefined) // => false
- *     isString(42) // => false
- *     isString(/regex/) // => false
- */
-const isString = function (it) {
-    return typeof it === "string";
-};
-
-/**
- * @example
- *     isValidTagName("div") // => true
- *     isValidTagName("div#idx") // => true
- *     isValidTagName("div.shiny.text-size-large") // => true
- *     isValidTagName("x-tag") // => true
- *     isValidTagName("my-custom-elem-v1") // => true
- *     isValidTagName("my-elem1") // => true
- *     isValidTagName("div#idx#idy") // => false
- *     isValidTagName("^&") // => false
- */
-const isValidTagName = function (tagName) {
-    if (isFunction(tagName)) {
-        return true;
-    }
-
-    const ids = (tagName || "").match(/#/g);
-    // eslint-disable-next-line no-magic-numbers
-    const hasAtMostOneId = !ids || ids.length <= 1;
-    const onlyContainsValidCharacters = /^[1-9a-zA-Z#-.]+$/.test(tagName);
-    const startsSimple = /^[a-zA-Z]/.test(tagName);
-    const endsSimple = /[a-zA-Z1-9-]$/.test(tagName);
-    const hasConsecutive = /\.\.|\.#|#\.|##|#-|#-\.|\.-#/g.test(tagName);
-
-    return startsSimple &&
-        endsSimple &&
-        hasAtMostOneId &&
-        onlyContainsValidCharacters &&
-        !hasConsecutive;
-};
-
 const prodUtils = {
     checkEnvironment: (invariant, Arr = Array, Obj = Object) => {
         const ArrayProto = Arr.prototype;
@@ -211,7 +140,7 @@ const configureRenderer = (utils) => {
     const traverse = (driver, expr) => {
 
         if (isString(expr)) {
-            return expr;
+            return driver.visit(expr, null, TEXT_NODE);
         }
 
         if (!isArray(expr)) {
@@ -235,13 +164,9 @@ const configureRenderer = (utils) => {
         const hasProps = isObject(maybeProps);
         const children = compact(hasProps ? childrenWithoutProps : allChildren);
 
-        if (driver.isSpecialTag(tagName)) {
-            return driver.visit(tagName);
-        }
-
-        if (!isValidTagName(tagName, expr)) {
-            // TODO: Should we really panic on invalid tag names?
-            throw new Error(`Invalid tag name "${tagName}"`);
+        const [isSpecial, specialNodeType] = driver.isSpecialTag(tagName);
+        if (isSpecial) {
+            return driver.visit(tagName, null, specialNodeType);
         }
 
         const [tag, id, classNames] = extractTagMeta(tagName);
@@ -252,13 +177,13 @@ const configureRenderer = (utils) => {
             return traverse(driver, tag.call(null, props, children));
         }
 
-        const close = driver.visit(tag, props);
+        const finalize = driver.visit(tag, props, ELEMENT_NODE);
 
-        if (isFunction(close)) {
-            return close(children.map((it) => traverse(driver, it)));
+        if (isFunction(finalize)) {
+            return finalize(children.map((it) => traverse(driver, it)));
         }
 
-        return close;
+        return finalize;
     };
 
     function render(drive, expr, root) {

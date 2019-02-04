@@ -46,6 +46,42 @@ describe("domdom-dom-server", () => {
 
     });
 
+    describe("DOM 'tagName' features", () => {
+
+        it("should reject invalid characters by panicking", () => {
+            expect(() => render(["ä"])).toThrow();
+            expect(() => render(["/"])).toThrow();
+            expect(() => render(["\\"])).toThrow();
+        });
+
+        it("should reject invalid characters by panicing", () => {
+            expect(() => render(["ä"])).toThrow();
+            expect(() => render(["/"])).toThrow();
+            expect(() => render(["\\"])).toThrow();
+        });
+
+        it("should reject malformed tag names", () => {
+            expect(() => render([".#"])).toThrow();
+            expect(() => render(["-.#"])).toThrow();
+            expect(() => render(["div.#"])).toThrow();
+            expect(() => render(["div#."])).toThrow();
+            expect(() => render(["div#.."])).toThrow();
+            expect(() => render(["div#asdf."])).toThrow();
+            expect(() => render(["div."])).toThrow();
+            expect(() => render(["div.asdf#"])).toThrow();
+            expect(() => render(["div.asdf-#-"])).toThrow();
+        });
+
+        it("should make sure that at most one '#' is accepted", () => {
+            expect(() => render(["div#id1#id2"])).toThrow();
+        });
+
+        it("should panic if more than one id is supplied via tag and prop", () => {
+            expect(() => render(["div#idx", { id: "idy" }])).toThrow();
+        });
+
+    });
+
     describe("rendering easy static examples", () => {
 
         it("should render the simplest helloworld", () => {

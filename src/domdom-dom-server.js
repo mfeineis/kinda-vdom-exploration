@@ -1,50 +1,15 @@
-
-const isArray = Array.isArray;
-
-/**
- * @example
- *     isObject({}) // => true
- *     isObject(Object) // => false
- *     isObject(() => {}) // => false
- *     isObject(function () {}) // => false
- *     isObject([]) // => false
- *     isObject(/regex/) // => false
- *     isObject(null) // => false
- *     isObject(undefined) // => false
- *     isObject("Not an object") // => false
- *     isObject(0) // => false
- *     isObject(42) // => false
- */
-const isObject = function (it) {
-    return !isArray(it) &&
-        typeof it === "object" &&
-        it !== null &&
-        !(it instanceof RegExp);
-};
-
-/**
- * @example
- *     isSpecialTag("!DOCTYPE html") // => true
- *     isSpecialTag("   !DOCTYPE html") // => true
- *     isSpecialTag("!DOCTYPE") // => false
- */
-const isSpecialTag = function (tagName) {
-    return /\s*!DOCTYPE\s+[^\s]+/.test(tagName);
-};
-
-/**
- * @example
- *     isString("A real hero") // => true
- *     isString("") // => true
- *     isString({}) // => false
- *     isString(null) // => false
- *     isString(undefined) // => false
- *     isString(42) // => false
- *     isString(/regex/) // => false
- */
-const isString = function (it) {
-    return typeof it === "string";
-};
+const {
+    DOCUMENT_TYPE_NODE,
+    ELEMENT_NODE,
+    INVALID_NODE,
+    TEXT_NODE,
+} = require("./constants");
+const {
+    isArray,
+    isObject,
+    isSpecialTag,
+    isString,
+} = require("./utils");
 
 const voidElementLookup = {
     area: true,
@@ -128,8 +93,17 @@ const spreadProps = function (props) {
 
 const driver = () => {
 
-    const visit = (tag, props) => {
-        if (isSpecialTag(tag)) {
+    const visit = (tag, props, nodeType) => {
+        if (nodeType === INVALID_NODE) {
+            // TODO: Should we really panic on invalid tag names?
+            throw new Error(`Invalid tag name "${tag}"`);
+        }
+
+        if (nodeType === TEXT_NODE) {
+            return tag;
+        }
+
+        if (nodeType === DOCUMENT_TYPE_NODE) {
             // FIXME: Validate doctype structure
             return `<${tag}>`;
         }

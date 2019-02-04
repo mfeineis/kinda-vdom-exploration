@@ -1,13 +1,13 @@
+const {
+    ELEMENT_NODE,
+    INVALID_NODE,
+    DOCUMENT_TYPE_NODE,
+    TEXT_NODE,
+} = require("./constants");
+const {
+    isSpecialTag,
+} = require("./utils");
 
-/**
- * @example
- *     isSpecialTag("!DOCTYPE html") // => true
- *     isSpecialTag("   !DOCTYPE html") // => true
- *     isSpecialTag("!DOCTYPE") // => false
- */
-const isSpecialTag = function (tagName) {
-    return /\s*!DOCTYPE\s+[^\s]+/.test(tagName);
-};
 
 const driver = (utils, root) => {
     const { invariant } = utils;
@@ -17,17 +17,23 @@ const driver = (utils, root) => {
         "Please supply a valid root node"
     );
 
-    const visit = (tag) => {
+    const document = root.ownerDocument;
 
-        const document = root.ownerDocument;
-        const child = document.createElement(tag);
-        root.appendChild(child);
+    const visit = (tag, _, nodeType) => {
+        switch (nodeType) {
+        case ELEMENT_NODE: {
+            const child = document.createElement(tag);
+            root.appendChild(child);
 
-        return (children) => {
-            children.forEach((it) => {
-                child.appendChild(document.createTextNode(it));
-            });
-        };
+            return (children) => {
+                children.forEach((it) => {
+                    child.appendChild(it);
+                });
+            };
+        }
+        case TEXT_NODE:
+            return document.createTextNode(tag);
+        }
     };
 
     return {
