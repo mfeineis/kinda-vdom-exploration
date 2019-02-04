@@ -69,15 +69,6 @@ const assembleProps = function (id, classNames, props) {
 
 /**
  * @example
- *     compact([1, null, 2, false, undefined, 3]) // => [1, 2, 3]
- */
-const compact = function (it) {
-    // FIXME: `jsdoctest` doesn't recognize arrow syntax apparently
-    return it.filter(Boolean);
-};
-
-/**
- * @example
  *     extractTagMeta("div") // => ["div", "", []]
  *     extractTagMeta("div#some-id") // => ["div", "some-id", []]
  *     extractTagMeta("div.cls-a.cls-b") // => ["div", "", ["cls-a", "cls-b"]]
@@ -149,20 +140,20 @@ const configureRenderer = (utils) => {
 
         if (isArray(expr[FIRST_ELEMENT])) {
             return driver.reduce(
-                compact(expr).map((it) => traverse(driver, it))
+                expr.map((it) => traverse(driver, it))
             );
         }
 
         if (expr[FIRST_ELEMENT] === "") {
             return driver.reduce(
-                compact(expr).map((it) => traverse(driver, it))
+                expr.map((it) => traverse(driver, it))
             );
         }
 
         const [tagName, maybeProps, ...childrenWithoutProps] = expr;
         const [, ...allChildren] = expr;
         const hasProps = isObject(maybeProps);
-        const children = compact(hasProps ? childrenWithoutProps : allChildren);
+        const children = hasProps ? childrenWithoutProps : allChildren;
 
         const [isSpecial, specialNodeType] = driver.isSpecialTag(tagName);
         if (isSpecial) {

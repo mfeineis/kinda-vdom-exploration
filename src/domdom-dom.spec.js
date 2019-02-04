@@ -1,4 +1,4 @@
-/* eslint-disable max-len, no-magic-numbers */
+/* eslint-disable capitalized-comments, max-len, no-magic-numbers */
 
 const pkg = require("../package.json");
 
@@ -139,58 +139,54 @@ describe("domdom-dom", () => {
     });
 
     const testSuite = (description, makeRoot) => {
+        const html = (items) => items.map((it) => it.trim()).join("");
 
         describe(description, () => {
 
             describe("simple examples rendering into an empty node", () => {
 
-                const checkSimpleCase = (expr) => {
-                    const [root, state] = makeRoot();
-
-                    render(root, expr);
-
-                    // Note: Having `nodeType` in there `jest` will identify
-                    // Them as DOM nodes and try to check for `instanceof Element`
-                    // Although we're in a node environment.
-                    expect(state.createdNodes).toEqual([
-                        {
-                            appendChild: state.createdNodes[0].appendChild,
-                            nodeName: expr[0],
-                            ownerDocument: root.ownerDocument,
-                        },
-                        {
-                            ownerDocument: root.ownerDocument,
-                            textContent: expr[1],
-                        },
-                    ]);
-
-                    expect(state.createdNodes).toHaveLength(2);
-                    expect(state.createdNodes[0]).toBe(state.appendedNodes[0]);
-                };
-
+                /*
                 it("should support rendering a plain string", () => {
-                    const [root, state] = makeRoot();
+                    const root = makeRoot();
 
                     render(root, "Simple String");
 
-                    expect(state.createdNodes).toEqual([
-                        {
-                            ownerDocument: root.ownerDocument,
-                            textContent: "Simple String",
-                        },
-                    ]);
+                    console.log(root.debug);
+
+                    expect(root.innerHTML).toBe(html([
+                        "Simple String",
+                    ]));
                 });
+                */
 
                 it("should append a simple <div> into the given 'root'", () => {
-                    checkSimpleCase(["div", "Hello, World!"]);
+                    const root = makeRoot();
+                    render(root, ["div", "Hello, World!"]);
+                    expect(root.innerHTML).toBe(html([
+                        "<div>",
+                        "  Hello, World!",
+                        "</div>",
+                    ]));
                 });
 
                 it("should append a simple <span> into the given 'root'", () => {
-                    checkSimpleCase(["span", "Simple"]);
+                    const root = makeRoot();
+                    render(root, ["span", "Simple"]);
+                    expect(root.innerHTML).toBe(html([
+                        "<span>",
+                        "  Simple",
+                        "</span>",
+                    ]));
                 });
 
                 it("should append a another <b> into the given 'root'", () => {
-                    checkSimpleCase(["b", "Bold"]);
+                    const root = makeRoot();
+                    render(root, ["b", "Bold"]);
+                    expect(root.innerHTML).toBe(html([
+                        "<b>",
+                        "  Bold",
+                        "</b>",
+                    ]));
                 });
 
             });
@@ -198,23 +194,47 @@ describe("domdom-dom", () => {
             describe("rendering flat expressions", () => {
 
                 it("should be able to render expressions with many text children", () => {
-                    const [root, state] = makeRoot();
+                    const root = makeRoot();
                     const labels = range(42).map((n) => `x${n}`);
 
                     render(root, ["div", ...labels]);
 
-                    expect(state.createdNodes).toEqual([
-                        {
-                            appendChild: state.createdNodes[0].appendChild,
-                            nodeName: "div",
-                            ownerDocument: root.ownerDocument,
-                        },
-                        ...labels.map((textContent) => ({
-                            ownerDocument: root.ownerDocument,
-                            textContent,
-                        })),
-                    ]);
+                    expect(root.innerHTML).toBe(html([
+                        "<div>",
+                        ...labels,
+                        "</div>",
+                    ]));
                 });
+
+                /*
+                it("should make it easy to compare DOM trees", () => {
+                    const root = makeRoot();
+
+                    render(root, "Hello, World!");
+
+                    console.log(root.debug);
+
+                    expect(root.innerHTML).toBe(html([
+                        "Hello, World",
+                    ]));
+                });
+                */
+
+                /*
+                it("should be able to render expressions with all kinds of children", () => {
+                    const root = makeRoot();
+
+                    render(root, ["div", ["b", "Bold!"], "Normal", ["i", "Italics!"]]);
+
+                    expect(root.innerHTML).toBe(html([
+                        "<div>",
+                        "  <b>Bold!</b>",
+                        "  Normal",
+                        "  <i>Italics!</i>",
+                        "</div>",
+                    ]));
+                });
+                */
 
             });
 
@@ -223,20 +243,50 @@ describe("domdom-dom", () => {
     };
 
     testSuite("render using a minimal DOM document mock", () => {
-        const state = {
-            appendedNodes: [],
-            createdNodes: [],
+
+        const walk = (self, nodes) => {
+            if (typeof self === "string") {
+                return self;
+            }
+
+            if (self && self.textContent) {
+                return self.textContent;
+            }
+
+            const children = nodes.map((child) => {
+                if (child && child.childNodes) {
+                    return walk(child, child.childNodes);
+                }
+
+                return walk(child, []);
+            }).join("");
+
+            if (self && self.nodeName) {
+                return [
+                    `<${self.nodeName}>`,
+                    children,
+                    `</${self.nodeName}>`,
+                ].join("");
+            }
+
+            return children;
         };
+
         const ownerDocument = Object.freeze({
             createElement: (nodeName) => {
+                const nodeState = {
+                    childNodes: [],
+                };
                 const node = Object.freeze({
                     appendChild: (child) => {
-                        state.appendedNodes.push(child);
+                        nodeState.childNodes.push(child);
+                    },
+                    get childNodes() {
+                        return nodeState.childNodes;
                     },
                     nodeName,
                     ownerDocument,
                 });
-                state.createdNodes.push(node);
                 return node;
             },
             createTextNode: (textContent) => {
@@ -244,16 +294,27 @@ describe("domdom-dom", () => {
                     ownerDocument,
                     textContent,
                 });
-                state.createdNodes.push(node);
                 return node;
             },
         });
-        return [{
+        const rootState = {
+            childNodes: [],
+        };
+        return {
             appendChild: (node) => {
-                state.appendedNodes.push(node);
+                rootState.childNodes.push(node);
+            },
+            get childNodes() {
+                return rootState.childNodes;
+            },
+            get debug() {
+                return JSON.stringify(rootState, null, "  ");
+            },
+            get innerHTML() {
+                return walk(null, rootState.childNodes);
             },
             ownerDocument,
-        }, state];
+        };
     });
 
 });
