@@ -10,7 +10,11 @@ const {
     isString,
 } = require("./utils");
 
-const FIRST_ELEMENT = 0;
+const slice = [].slice;
+
+const FIRST = 0;
+const SECOND = 1;
+const THIRD = 2;
 const TWO = 2;
 
 /**
@@ -23,10 +27,12 @@ const TWO = 2;
  *     assembleProps("", ["X"], { class: "Z", className: "Y" })
  *     // => { classList: ["X", "Z", "Y"] }
  */
-const assembleProps = function (id, classNames, props) {
+function assembleProps(id, classNames, props) {
     if (id) {
         if (props.id) {
-            throw new Error(`Multiple IDs "${id}"/${props.id} provided`);
+            throw new Error(
+                "Multiple IDs \"" + id + "\"/" + props.id + " provided"
+            );
         }
 
         // eslint-disable-next-line immutable/no-mutation
@@ -39,7 +45,9 @@ const assembleProps = function (id, classNames, props) {
 
     if (isObject(props.class)) {
         const truthyValuedKeys = Object.keys(props.class).filter(
-            (name) => props.class[name]
+            function (name) {
+                return props.class[name];
+            }
         );
         classList = classList.concat(truthyValuedKeys);
         delete props.class;
@@ -65,7 +73,7 @@ const assembleProps = function (id, classNames, props) {
     }
 
     return props;
-};
+}
 
 /**
  * @example
@@ -76,23 +84,26 @@ const assembleProps = function (id, classNames, props) {
  *     // => ["i", "idx", ["some-class", "fx42"]]
  *     extractTagMeta(extractTagMeta) // => [extractTagMeta, "", []]
  */
-const extractTagMeta = function (tagName) {
+function extractTagMeta(tagName) {
     if (isFunction(tagName)) {
         return [tagName, "", []];
     }
 
-    const tag = tagName.match(/^[^.#]+/)[FIRST_ELEMENT];
-    const id = (tagName.match(/#[^.]+/) || [""])[FIRST_ELEMENT]
+    const tag = tagName.match(/^[^.#]+/)[FIRST];
+    const id = (tagName.match(/#[^.]+/) || [""])[FIRST]
         .replace("#", "");
-    const classNames = (tagName.match(/\.[^.#]+/g) || []).map((cls) => {
+    const classNames = (tagName.match(/\.[^.#]+/g) || []).map(function (cls) {
         return cls.replace(".", "");
     });
     return [tag, id, classNames];
-};
+}
 
 const prodUtils = {
-    checkEnvironment: (invariant, Arr = Array, Obj = Object) => {
+    checkEnvironment(invariant, injectedArr, injectedObj) {
+        const Arr = injectedArr || Array;
+        const Obj = injectedObj || Object;
         const ArrayProto = Arr.prototype;
+
         invariant(
             typeof Arr.isArray === "function",
             "'Array.isArray' is required"
@@ -114,21 +125,24 @@ const prodUtils = {
             "'Object.keys' is required"
         );
     },
-    invariant: (condition, message) => {
+    invariant(condition, message) {
         if (!condition) {
-            throw new Error(`InvariantViolation: ${message}`);
+            throw new Error("InvariantViolation: " + message);
         }
     },
-    trace: () => {},
+    trace() {},
 };
 
-const configureRenderer = (utils) => {
-    const { checkEnvironment, invariant } = utils || prodUtils;
+function configureRenderer(injectedUtils) {
+    const utils = injectedUtils || prodUtils;
+
+    const checkEnvironment = utils.checkEnvironment;
+    const invariant = utils.invariant;
 
     checkEnvironment(invariant);
 
     // FIXME: Remove Recursion!
-    const traverse = (driver, expr) => {
+    function traverse(driver, expr) {
 
         if (isString(expr)) {
             return driver.visit(expr, null, TEXT_NODE);
@@ -138,29 +152,40 @@ const configureRenderer = (utils) => {
             return "";
         }
 
-        if (isArray(expr[FIRST_ELEMENT])) {
+        if (isArray(expr[FIRST])) {
             return driver.reduce(
-                expr.map((it) => traverse(driver, it))
+                expr.map(function (it) {
+                    return traverse(driver, it);
+                })
             );
         }
 
-        if (expr[FIRST_ELEMENT] === "") {
+        if (expr[FIRST] === "") {
             return driver.reduce(
-                expr.map((it) => traverse(driver, it))
+                expr.map(function (it) {
+                    return traverse(driver, it);
+                })
             );
         }
 
-        const [tagName, maybeProps, ...childrenWithoutProps] = expr;
-        const [, ...allChildren] = expr;
+        const tagName = expr[FIRST];
+        const maybeProps = expr[SECOND];
+        const childrenWithoutProps = slice.call(expr, THIRD);
+        const allChildren = slice.call(expr, SECOND);
         const hasProps = isObject(maybeProps);
         const children = hasProps ? childrenWithoutProps : allChildren;
 
-        const [isSpecial, specialNodeType] = driver.isSpecialTag(tagName);
+        const specialResult = driver.isSpecialTag(tagName);
+        const isSpecial = specialResult[FIRST];
+        const specialNodeType = specialResult[SECOND];
         if (isSpecial) {
             return driver.visit(tagName, null, specialNodeType);
         }
 
-        const [tag, id, classNames] = extractTagMeta(tagName);
+        const metaResult = extractTagMeta(tagName);
+        const tag = metaResult[FIRST];
+        const id = metaResult[SECOND];
+        const classNames = metaResult[THIRD];
         const props =
             assembleProps(id, classNames, hasProps ? maybeProps : {});
 
@@ -171,11 +196,13 @@ const configureRenderer = (utils) => {
         const finalize = driver.visit(tag, props, ELEMENT_NODE);
 
         if (isFunction(finalize)) {
-            return finalize(children.map((it) => traverse(driver, it)));
+            return finalize(children.map(function (it) {
+                return traverse(driver, it);
+            }));
         }
 
         return finalize;
-    };
+    }
 
     function render(drive, expr, root) {
 
@@ -192,7 +219,7 @@ const configureRenderer = (utils) => {
     }
 
     return render;
-};
+}
 
 // FIXME: Make this eslint rule work with `module.exports`
 // eslint-disable-next-line immutable/no-mutation

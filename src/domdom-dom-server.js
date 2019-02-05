@@ -33,17 +33,17 @@ const voidElementLookup = {
  *     isVoidElement("br") // => true
  *     isVoidElement("div") // => false
  */
-const isVoidElement = function (tagName) {
+function isVoidElement(tagName) {
     return Boolean(voidElementLookup[tagName]);
-};
+}
 
 /**
  * @example
- *     serializePropValue({ a: "a", b: "b" }) // => "{\"a\":\"a\",\"b\":\"b\"}"
+ *     serialize({ a: "a", b: "b" }) // => "{\"a\":\"a\",\"b\":\"b\"}"
  */
-const serializePropValue = function (value) {
+function serialize(value) {
     return JSON.stringify(value);
-};
+}
 
 /**
  * @example
@@ -54,8 +54,8 @@ const serializePropValue = function (value) {
  *     spreadProps(/regex/) // => ""
  *     spreadProps(() => {}) // => ""
  */
-const spreadProps = function (props) {
-    return Object.keys(props).sort().map((key) => {
+function spreadProps(props) {
+    return Object.keys(props).sort().map(function (key) {
         if (/^on/i.test(key)) {
             return "";
         }
@@ -63,10 +63,12 @@ const spreadProps = function (props) {
         const value = props[key];
         if (key === "classList") {
             if (value.length) {
-                const cssCache = {};
-                // eslint-disable-next-line immutable/no-mutation
-                value.forEach((name) => cssCache[name] = true);
-                return ` class="${Object.keys(cssCache).sort().join(" ")}"`;
+                const cache = {};
+                value.forEach(function (name) {
+                    // eslint-disable-next-line immutable/no-mutation
+                    cache[name] = true;
+                });
+                return " class=\"" + Object.keys(cache).sort().join(" ") + "\"";
             }
 
             return "";
@@ -74,29 +76,29 @@ const spreadProps = function (props) {
 
         if (isObject(value) || isArray(value)) {
             if (key === "data") {
-                return Object.keys(value).sort().map((name) => {
+                return Object.keys(value).sort().map(function (name) {
                     const propValue = value[name];
                     if (isString(propValue)) {
-                        return ` data-${name}="${propValue}"`;
+                        return " data-" + name + "=\"" + propValue + "\"";
                     }
 
-                    return ` data-${name}='${serializePropValue(propValue)}'`;
+                    return " data-" + name + "='" + serialize(propValue) + "'";
                 }).join("");
             }
 
-            return ` ${key}='${serializePropValue(value)}'`;
+            return " " + key + "='" + serialize(value) + "'";
         }
 
-        return ` ${key}="${value}"`;
+        return " " + key + "=\"" + value + "\"";
     }).join("");
-};
+}
 
-const driver = () => {
+function driver() {
 
-    const visit = (tag, props, nodeType) => {
+    function visit(tag, props, nodeType) {
         if (nodeType === INVALID_NODE) {
             // TODO: Should we really panic on invalid tag names?
-            throw new Error(`Invalid tag name "${tag}"`);
+            throw new Error("Invalid tag name \"" + tag + "\"");
         }
 
         if (nodeType === TEXT_NODE) {
@@ -105,27 +107,31 @@ const driver = () => {
 
         if (nodeType === DOCUMENT_TYPE_NODE) {
             // FIXME: Validate doctype structure
-            return `<${tag}>`;
+            return "<" + tag + ">";
         }
 
         if (isVoidElement(tag)) {
             const propsString = spreadProps(props);
-            return `<${tag}${propsString}/>`;
+            return "<" + tag + propsString + "/>";
         }
 
         const propsString = spreadProps(props);
 
-        return (children) => {
-            return `<${tag}${propsString}>${children.join("")}</${tag}>`;
+        return function (children) {
+            return "<" + tag + propsString + ">" +
+                children.join("") +
+                "</" + tag + ">";
         };
-    };
+    }
 
     return {
         isSpecialTag,
-        reduce: (nodes) => nodes.join(""),
+        reduce(nodes) {
+            return nodes.join("");
+        },
         visit,
     };
-};
+}
 
 // eslint-disable-next-line immutable/no-mutation
 driver.version = "0.1.0";

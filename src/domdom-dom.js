@@ -8,9 +8,8 @@ const {
     isSpecialTag,
 } = require("./utils");
 
-
-const driver = (utils, root) => {
-    const { invariant } = utils;
+function driver(utils, root) {
+    const invariant = utils.invariant;
 
     invariant(
         root && root.ownerDocument && root.ownerDocument.createElement,
@@ -19,14 +18,14 @@ const driver = (utils, root) => {
 
     const document = root.ownerDocument;
 
-    const visit = (tag, _, nodeType) => {
+    function visit(tag, _, nodeType) {
         switch (nodeType) {
         case ELEMENT_NODE: {
             const child = document.createElement(tag);
             root.appendChild(child);
 
-            return (children) => {
-                children.forEach((it) => {
+            return function (children) {
+                children.forEach(function (it) {
                     child.appendChild(it);
                 });
             };
@@ -34,13 +33,13 @@ const driver = (utils, root) => {
         case TEXT_NODE:
             return document.createTextNode(tag);
         }
-    };
+    }
 
     return {
         isSpecialTag,
         visit,
     };
-};
+}
 
 // eslint-disable-next-line immutable/no-mutation
 driver.version = "0.1.0";

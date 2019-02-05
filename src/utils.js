@@ -16,9 +16,9 @@ const isArray = Array.isArray;
  *     isFunction(false) // => false
  *     isFunction(42) // => false
  */
-const isFunction = function (it) {
+function isFunction(it) {
     return typeof it === "function";
-};
+}
 
 /**
  * @example
@@ -34,12 +34,12 @@ const isFunction = function (it) {
  *     isObject(0) // => false
  *     isObject(42) // => false
  */
-const isObject = function (it) {
+function isObject(it) {
     return !isArray(it) &&
         typeof it === "object" &&
         it !== null &&
         !(it instanceof RegExp);
-};
+}
 
 /**
  * @example
@@ -48,7 +48,7 @@ const isObject = function (it) {
  *     isSpecialTag("!DOCTYPE") // => [true, INVALID_NODE]
  *     isSpecialTag("div") // => [false]
  */
-const isSpecialTag = function (tagName) {
+function isSpecialTag(tagName) {
     if (/\s*!DOCTYPE\s+[^\s]+/.test(tagName)) {
         return [true, DOCUMENT_TYPE_NODE];
     }
@@ -58,7 +58,7 @@ const isSpecialTag = function (tagName) {
     }
 
     return [false];
-};
+}
 
 /**
  * @example
@@ -70,9 +70,9 @@ const isSpecialTag = function (tagName) {
  *     isString(42) // => false
  *     isString(/regex/) // => false
  */
-const isString = function (it) {
+function isString(it) {
     return typeof it === "string";
-};
+}
 
 /**
  * @example
@@ -85,7 +85,7 @@ const isString = function (it) {
  *     isValidTagName("div#idx#idy") // => false
  *     isValidTagName("^&") // => false
  */
-const isValidTagName = function (tagName) {
+function isValidTagName(tagName) {
     if (isFunction(tagName)) {
         return true;
     }
@@ -103,7 +103,7 @@ const isValidTagName = function (tagName) {
         hasAtMostOneId &&
         onlyContainsValidCharacters &&
         !hasConsecutive;
-};
+}
 
 // eslint-disable-next-line immutable/no-mutation
 module.exports = {
