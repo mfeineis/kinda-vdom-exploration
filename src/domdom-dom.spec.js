@@ -8,24 +8,6 @@ const DomDomDom = require("./domdom-dom");
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 
-class InvariantViolation extends Error {}
-const noop = () => {};
-
-const makeTestUtils = (reportViolation = noop, checkEnv = noop) => {
-    // eslint-disable-next-line no-console
-    const trace = (...args) => console.log("[test:domdom]", ...args);
-    return {
-        checkEnvironment: checkEnv,
-        invariant: (condition, message) => {
-            if (!condition) {
-                reportViolation(message);
-                throw new InvariantViolation(message);
-            }
-        },
-        trace,
-    };
-};
-
 const range = (count, step = 1) => {
     const result = [];
     // eslint-disable-next-line immutable/no-let
@@ -37,18 +19,94 @@ const range = (count, step = 1) => {
     return result;
 };
 
+const makeRoot = () => {
+
+    const walk = (self, nodes) => {
+        if (typeof self === "string") {
+            return self;
+        }
+
+        if (self && self.textContent) {
+            return self.textContent;
+        }
+
+        const children = nodes.map((child) => {
+            if (child && child.childNodes) {
+                return walk(child, child.childNodes);
+            }
+
+            return walk(child, []);
+        }).join("");
+
+        if (self && self.nodeName) {
+            return [
+                `<${self.nodeName}>`,
+                children,
+                `</${self.nodeName}>`,
+            ].join("");
+        }
+
+        return children;
+    };
+
+    const ownerDocument = Object.freeze({
+        createElement: (nodeName) => {
+            const nodeState = {
+                childNodes: [],
+            };
+            const node = Object.freeze({
+                appendChild: (child) => {
+                    nodeState.childNodes.push(child);
+                },
+                get childNodes() {
+                    return nodeState.childNodes;
+                },
+                nodeName,
+                ownerDocument,
+            });
+            return node;
+        },
+        createTextNode: (textContent) => {
+            const node = Object.freeze({
+                ownerDocument,
+                textContent,
+            });
+            return node;
+        },
+    });
+    const rootState = {
+        childNodes: [],
+    };
+    return {
+        appendChild: (node) => {
+            rootState.childNodes.push(node);
+        },
+        get childNodes() {
+            return rootState.childNodes;
+        },
+        get debug() {
+            return JSON.stringify(rootState, null, "  ");
+        },
+        get innerHTML() {
+            return walk(null, rootState.childNodes);
+        },
+        ownerDocument,
+    };
+};
+
+const html = (items) => items.map((it) => it.trim()).join("");
+
 describe("domdom-dom", () => {
     const { configureRenderer } = DomDom;
-    const utils = makeTestUtils();
     const driver = DomDomDom;
-    const baseRender = configureRenderer(utils);
+    const baseRender = configureRenderer();
     const render = (root, it) => baseRender(driver, it, root);
 
     describe("the 'domdom-dom' driver", () => {
 
         it("should be a function with arity 2", () => {
             expect(typeof driver).toBe("function");
-            expect(driver).toHaveLength(2);
+            expect(driver).toHaveLength(1);
         });
 
         it("should export the proper 'version' string matching the package version", () => {
@@ -96,10 +154,9 @@ describe("domdom-dom", () => {
     describe("simple examples", () => {
 
         it("should check that the given 'root' has an 'ownerDocument' property", () => {
-            expect(() => render(null, [])).toThrow(InvariantViolation);
-            expect(() => render({}, [])).toThrow(InvariantViolation);
-            expect(() => render({ ownerDocument: {} }, []))
-                .toThrow(InvariantViolation);
+            expect(() => render(null, [])).toThrow();
+            expect(() => render({}, [])).toThrow();
+            expect(() => render({ ownerDocument: {} }, [])).toThrow();
             expect(() => render({ ownerDocument: { createElement: 1 } }, ["div"]))
                 .toThrow(TypeError);
             expect(() => render({ ownerDocument: { createElement: jest.fn() } }, []))
@@ -109,15 +166,15 @@ describe("domdom-dom", () => {
         it("should check that the given 'expr' is valid", () => {
             expect(() => render(
                 { ownerDocument: { createElement: jest.fn() } }
-            )).toThrow(InvariantViolation);
+            )).toThrow();
             expect(() => render(
                 { ownerDocument: { createElement: jest.fn() } },
                 {}
-            )).toThrow(InvariantViolation);
+            )).toThrow();
             expect(() => render(
                 { ownerDocument: { createElement: jest.fn() } },
                 () => {}
-            )).toThrow(InvariantViolation);
+            )).toThrow();
         });
 
         it("should use 'ownerDocument' of the 'root'", () => {
@@ -138,183 +195,85 @@ describe("domdom-dom", () => {
 
     });
 
-    const testSuite = (description, makeRoot) => {
-        const html = (items) => items.map((it) => it.trim()).join("");
+    describe("render using a minimal DOM document mock", () => {
 
-        describe(description, () => {
+        describe("simple examples rendering into an empty node", () => {
 
-            describe("simple examples rendering into an empty node", () => {
+            it("should support rendering a plain string", () => {
+                const root = makeRoot();
 
-                /*
-                it("should support rendering a plain string", () => {
-                    const root = makeRoot();
+                render(root, "Simple String");
 
-                    render(root, "Simple String");
-
-                    console.log(root.debug);
-
-                    expect(root.innerHTML).toBe(html([
-                        "Simple String",
-                    ]));
-                });
-                */
-
-                it("should append a simple <div> into the given 'root'", () => {
-                    const root = makeRoot();
-                    render(root, ["div", "Hello, World!"]);
-                    expect(root.innerHTML).toBe(html([
-                        "<div>",
-                        "  Hello, World!",
-                        "</div>",
-                    ]));
-                });
-
-                it("should append a simple <span> into the given 'root'", () => {
-                    const root = makeRoot();
-                    render(root, ["span", "Simple"]);
-                    expect(root.innerHTML).toBe(html([
-                        "<span>",
-                        "  Simple",
-                        "</span>",
-                    ]));
-                });
-
-                it("should append a another <b> into the given 'root'", () => {
-                    const root = makeRoot();
-                    render(root, ["b", "Bold"]);
-                    expect(root.innerHTML).toBe(html([
-                        "<b>",
-                        "  Bold",
-                        "</b>",
-                    ]));
-                });
-
+                expect(root.innerHTML).toBe(html([
+                    "Simple String",
+                ]));
             });
 
-            describe("rendering flat expressions", () => {
+            it("should append a simple <div> into the given 'root'", () => {
+                const root = makeRoot();
+                render(root, ["div", "Hello, World!"]);
+                expect(root.innerHTML).toBe(html([
+                    "<div>",
+                    "  Hello, World!",
+                    "</div>",
+                ]));
+            });
 
-                it("should be able to render expressions with many text children", () => {
-                    const root = makeRoot();
-                    const labels = range(42).map((n) => `x${n}`);
+            it("should append a simple <span> into the given 'root'", () => {
+                const root = makeRoot();
+                render(root, ["span", "Simple"]);
+                expect(root.innerHTML).toBe(html([
+                    "<span>",
+                    "  Simple",
+                    "</span>",
+                ]));
+            });
 
-                    render(root, ["div", ...labels]);
-
-                    expect(root.innerHTML).toBe(html([
-                        "<div>",
-                        ...labels,
-                        "</div>",
-                    ]));
-                });
-
-                /*
-                it("should make it easy to compare DOM trees", () => {
-                    const root = makeRoot();
-
-                    render(root, "Hello, World!");
-
-                    console.log(root.debug);
-
-                    expect(root.innerHTML).toBe(html([
-                        "Hello, World",
-                    ]));
-                });
-                */
-
-                /*
-                it("should be able to render expressions with all kinds of children", () => {
-                    const root = makeRoot();
-
-                    render(root, ["div", ["b", "Bold!"], "Normal", ["i", "Italics!"]]);
-
-                    expect(root.innerHTML).toBe(html([
-                        "<div>",
-                        "  <b>Bold!</b>",
-                        "  Normal",
-                        "  <i>Italics!</i>",
-                        "</div>",
-                    ]));
-                });
-                */
-
+            it("should append a another <b> into the given 'root'", () => {
+                const root = makeRoot();
+                render(root, ["b", "Bold"]);
+                expect(root.innerHTML).toBe(html([
+                    "<b>",
+                    "  Bold",
+                    "</b>",
+                ]));
             });
 
         });
 
-    };
+        describe("rendering flat expressions", () => {
 
-    testSuite("render using a minimal DOM document mock", () => {
+            it("should be able to render expressions with many text children", () => {
+                const root = makeRoot();
+                const labels = range(42).map((n) => `x${n}`);
 
-        const walk = (self, nodes) => {
-            if (typeof self === "string") {
-                return self;
-            }
+                render(root, ["div", ...labels]);
 
-            if (self && self.textContent) {
-                return self.textContent;
-            }
+                expect(root.innerHTML).toBe(html([
+                    "<div>",
+                    ...labels,
+                    "</div>",
+                ]));
+            });
 
-            const children = nodes.map((child) => {
-                if (child && child.childNodes) {
-                    return walk(child, child.childNodes);
-                }
+            /*
+            it("should be able to render expressions with all kinds of children", () => {
+                const root = makeRoot();
 
-                return walk(child, []);
-            }).join("");
+                render(root, ["div", ["b", "Bold!"], "Normal", ["i", "Italics!"]]);
 
-            if (self && self.nodeName) {
-                return [
-                    `<${self.nodeName}>`,
-                    children,
-                    `</${self.nodeName}>`,
-                ].join("");
-            }
+                expect(root.innerHTML).toBe(html([
+                    "<div>",
+                    "  <b>Bold!</b>",
+                    "  Normal",
+                    "  <i>Italics!</i>",
+                    "</div>",
+                ]));
+            });
+            */
 
-            return children;
-        };
-
-        const ownerDocument = Object.freeze({
-            createElement: (nodeName) => {
-                const nodeState = {
-                    childNodes: [],
-                };
-                const node = Object.freeze({
-                    appendChild: (child) => {
-                        nodeState.childNodes.push(child);
-                    },
-                    get childNodes() {
-                        return nodeState.childNodes;
-                    },
-                    nodeName,
-                    ownerDocument,
-                });
-                return node;
-            },
-            createTextNode: (textContent) => {
-                const node = Object.freeze({
-                    ownerDocument,
-                    textContent,
-                });
-                return node;
-            },
         });
-        const rootState = {
-            childNodes: [],
-        };
-        return {
-            appendChild: (node) => {
-                rootState.childNodes.push(node);
-            },
-            get childNodes() {
-                return rootState.childNodes;
-            },
-            get debug() {
-                return JSON.stringify(rootState, null, "  ");
-            },
-            get innerHTML() {
-                return walk(null, rootState.childNodes);
-            },
-            ownerDocument,
-        };
+
     });
 
 });

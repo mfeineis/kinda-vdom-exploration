@@ -45,15 +45,7 @@
     <script src="dist/domdom-dom-server.js"></script>
     <script>
 
-     const utils = {
-         checkEnvironment: DomDom._.checkEnvironment,
-         invariant: DomDom._.invariant,
-         // eslint-disable-next-line no-console
-         trace: function () {
-             console.log.apply(console, ["[domdom.hello]"].concat(arguments));
-         },
-     };
-     const render = DomDom.configureRenderer(utils);
+     const render = DomDom.configureRenderer();
 
      const makeSample = function (title, data) {
          console.log("makeSample", title, data);

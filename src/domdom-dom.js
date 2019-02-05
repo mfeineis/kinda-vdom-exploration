@@ -5,11 +5,11 @@ const {
     TEXT_NODE,
 } = require("./constants");
 const {
+    invariant,
     isSpecialTag,
 } = require("./utils");
 
-function driver(utils, root) {
-    const invariant = utils.invariant;
+function driver(root) {
 
     invariant(
         root && root.ownerDocument && root.ownerDocument.createElement,
@@ -18,7 +18,7 @@ function driver(utils, root) {
 
     const document = root.ownerDocument;
 
-    function visit(tag, _, nodeType) {
+    function visit(tag, _, nodeType, isTopLevel) {
         switch (nodeType) {
         case ELEMENT_NODE: {
             const child = document.createElement(tag);
@@ -30,8 +30,13 @@ function driver(utils, root) {
                 });
             };
         }
-        case TEXT_NODE:
-            return document.createTextNode(tag);
+        case TEXT_NODE: {
+            const node = document.createTextNode(tag);
+            if (isTopLevel) {
+                root.appendChild(node);
+            }
+            return node;
+        }
         }
     }
 

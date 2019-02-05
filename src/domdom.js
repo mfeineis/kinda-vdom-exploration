@@ -4,6 +4,7 @@ const {
     DOCUMENT_TYPE_NODE,
 } = require("./constants");
 const {
+    invariant,
     isArray,
     isFunction,
     isObject,
@@ -38,7 +39,6 @@ function assembleProps(id, classNames, props) {
         // eslint-disable-next-line immutable/no-mutation
         props.id = id;
     }
-
 
     // eslint-disable-next-line immutable/no-let
     let classList = classNames;
@@ -98,54 +98,13 @@ function extractTagMeta(tagName) {
     return [tag, id, classNames];
 }
 
-const prodUtils = {
-    checkEnvironment(invariant, injectedArr, injectedObj) {
-        const Arr = injectedArr || Array;
-        const Obj = injectedObj || Object;
-        const ArrayProto = Arr.prototype;
-
-        invariant(
-            typeof Arr.isArray === "function",
-            "'Array.isArray' is required"
-        );
-        invariant(
-            typeof ArrayProto.filter === "function",
-            "'Array.prototype.filter' is required"
-        );
-        invariant(
-            typeof ArrayProto.forEach === "function",
-            "'Array.prototype.forEach' is required"
-        );
-        invariant(
-            typeof ArrayProto.map === "function",
-            "'Array.prototype.map' is required"
-        );
-        invariant(
-            typeof Obj.keys === "function",
-            "'Object.keys' is required"
-        );
-    },
-    invariant(condition, message) {
-        if (!condition) {
-            throw new Error("InvariantViolation: " + message);
-        }
-    },
-    trace() {},
-};
-
-function configureRenderer(injectedUtils) {
-    const utils = injectedUtils || prodUtils;
-
-    const checkEnvironment = utils.checkEnvironment;
-    const invariant = utils.invariant;
-
-    checkEnvironment(invariant);
+function configureRenderer() {
 
     // FIXME: Remove Recursion!
-    function traverse(driver, expr) {
+    function traverse(driver, expr, isTopLevel) {
 
         if (isString(expr)) {
-            return driver.visit(expr, null, TEXT_NODE);
+            return driver.visit(expr, null, TEXT_NODE, isTopLevel);
         }
 
         if (!isArray(expr)) {
@@ -179,7 +138,7 @@ function configureRenderer(injectedUtils) {
         const isSpecial = specialResult[FIRST];
         const specialNodeType = specialResult[SECOND];
         if (isSpecial) {
-            return driver.visit(tagName, null, specialNodeType);
+            return driver.visit(tagName, null, specialNodeType, isTopLevel);
         }
 
         const metaResult = extractTagMeta(tagName);
@@ -193,7 +152,7 @@ function configureRenderer(injectedUtils) {
             return traverse(driver, tag.call(null, props, children));
         }
 
-        const finalize = driver.visit(tag, props, ELEMENT_NODE);
+        const finalize = driver.visit(tag, props, ELEMENT_NODE, isTopLevel);
 
         if (isFunction(finalize)) {
             return finalize(children.map(function (it) {
@@ -215,7 +174,7 @@ function configureRenderer(injectedUtils) {
             "Please provide a valid expression"
         );
 
-        return traverse(drive(utils, root), expr);
+        return traverse(drive(root), expr, true);
     }
 
     return render;
@@ -224,9 +183,8 @@ function configureRenderer(injectedUtils) {
 // FIXME: Make this eslint rule work with `module.exports`
 // eslint-disable-next-line immutable/no-mutation
 module.exports = {
-    _: prodUtils,
     configureRenderer,
-    render: configureRenderer(prodUtils),
+    render: configureRenderer(),
     version: "0.1.0",
 };
 

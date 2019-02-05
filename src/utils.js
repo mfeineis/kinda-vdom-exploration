@@ -3,6 +3,12 @@ const {
     INVALID_NODE,
 } = require("./constants");
 
+function invariant(condition, message) {
+    if (!condition) {
+        throw new Error("InvariantViolation: " + message);
+    }
+}
+
 const isArray = Array.isArray;
 
 /**
@@ -107,6 +113,7 @@ function isValidTagName(tagName) {
 
 // eslint-disable-next-line immutable/no-mutation
 module.exports = {
+    invariant,
     isArray,
     isFunction,
     isObject,
