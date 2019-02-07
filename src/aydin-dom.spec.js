@@ -3,6 +3,8 @@ const pkg = require("../package.json");
 const Aydin = require("./aydin");
 const AydinDom = require("./aydin-dom");
 
+const { tracable } = require("./testUtils");
+
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 
@@ -99,6 +101,9 @@ describe("aydin-dom", () => {
     const driver = AydinDom;
     const baseRender = configureRenderer();
     const render = (root, it) => baseRender(driver, it, root);
+    const traceRender = (root, log, it) => {
+        return baseRender(tracable(driver, log), it, root);
+    };
 
     describe("the 'aydin-dom' driver", () => {
 
@@ -254,8 +259,36 @@ describe("aydin-dom", () => {
                 ]));
             });
 
-            /*
-            It("should be able to render expressions with all kinds of children", () => {
+            it("should be able to render shallow trees of expressions", () => {
+                const root = makeRoot();
+                const log = [];
+
+                traceRender(root, log,
+                    ["div", "One", "Two", ["b", "Bold!"], "Four", "Five"]
+                );
+
+                expect(log).toEqual([
+                    "0000: [0] ELEMENT_NODE <div>",
+                    "0001: [0,0] TEXT_NODE 'One'",
+                    "0002: [0,1] TEXT_NODE 'Two'",
+                    "0003: [0,2] ELEMENT_NODE <b>",
+                    "0004: [0,2,0] TEXT_NODE 'Bold!'",
+                    "0005: [0,3] TEXT_NODE 'Four'",
+                    "0006: [0,4] TEXT_NODE 'Five'",
+                ]);
+
+                expect(root.innerHTML).toBe(html([
+                    "<div>",
+                    "  One",
+                    "  Two",
+                    "  <b>Bold!</b>",
+                    "  Four",
+                    "  Five",
+                    "</div>",
+                ]));
+            });
+
+            it("should be able to render expressions with all kinds of children", () => {
                 const root = makeRoot();
 
                 render(root, ["div", ["b", "Bold!"], "Normal", ["i", "Italics!"]]);
@@ -268,7 +301,6 @@ describe("aydin-dom", () => {
                     "</div>",
                 ]));
             });
-            */
 
         });
 

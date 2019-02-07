@@ -95,7 +95,14 @@
 
      {
         const node = document.createElement("div");
-        const expr = ["span", "Hello, real DOM!"];
+        const expr =
+            ["span",
+                "Hello, real DOM!",
+                ["div",
+                    ["ol", ["li", "1st"], ["li", "2nd"]],
+                    ["p", "With some text"]
+                ]
+            ];
         Aydin.render(AydinDom, expr, node);
 
         const pre = document.createElement("pre");

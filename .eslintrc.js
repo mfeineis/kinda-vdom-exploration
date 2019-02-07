@@ -69,7 +69,8 @@ module.exports = {
             "files": [
                 "rollup.config.js",
                 "stryker.conf.js",
-                "src/*.spec.js",
+                "src/**/*.spec.js",
+                "src/testUtils.js",
             ],
             "parserOptions": {
                 "ecmaVersion": 2017,

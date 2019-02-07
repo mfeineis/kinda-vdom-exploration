@@ -1,6 +1,7 @@
 const pkg = require("../package.json");
 
 const Aydin = require("./aydin");
+const { identityDriver, tracable } = require("./testUtils.js");
 
 describe("Aydin", () => {
 
@@ -30,19 +31,6 @@ describe("Aydin", () => {
     });
 
     describe("the 'configureRenderer' factory", () => {
-        const identityDriver = () => ({
-            isSpecialTag: () => [false],
-            visit: (expr, _, nodeType) => {
-                switch (nodeType) {
-                case 1:
-                    return (children) => [expr, ...children];
-                case 3:
-                    return expr;
-                default:
-                    throw new Error(`Unsupported 'nodeType' ${nodeType}`);
-                }
-            },
-        });
         const { configureRenderer } = Aydin;
 
         it("should be a function", () => {
@@ -91,6 +79,34 @@ describe("Aydin", () => {
 
             it("should panic if no 'tagName' is given", () => {
                 expect(() => render([null, "Some text"])).toThrow();
+            });
+
+        });
+
+        describe("debugability", () => {
+            const base = configureRenderer();
+            const render = (expr, log) => base(tracable(identityDriver, log), expr);
+
+            it("should be easy debug how the expression is traversed", () => {
+                const log = [];
+                render(
+                    ["div",
+                        "One",
+                        "Two",
+                        ["span", "Three", "Four"]
+                    ],
+                    log
+                );
+
+                expect(log).toEqual([
+                    "0000: [0] ELEMENT_NODE <div>",
+                    "0001: [0,0] TEXT_NODE 'One'",
+                    "0002: [0,1] TEXT_NODE 'Two'",
+                    "0003: [0,2] ELEMENT_NODE <span>",
+                    "0004: [0,2,0] TEXT_NODE 'Three'",
+                    "0005: [0,2,1] TEXT_NODE 'Four'",
+                ]);
+
             });
 
         });

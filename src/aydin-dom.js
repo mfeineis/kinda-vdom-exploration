@@ -4,6 +4,8 @@ const ELEMENT_NODE = constants.ELEMENT_NODE;
 const INVALID_NODE = constants.INVALID_NODE;
 const TEXT_NODE = constants.TEXT_NODE;
 
+const TOPLEVEL = 1;
+
 const utils = require("./utils");
 const invariant = utils.invariant;
 const isSpecialTag = utils.isSpecialTag;
@@ -17,23 +19,28 @@ function driver(root) {
 
     const document = root.ownerDocument;
 
-    function visit(tag, _, nodeType, isTopLevel) {
+    function visit(tag, _, nodeType, path) {
         switch (nodeType) {
         case ELEMENT_NODE: {
-            const child = document.createElement(tag);
-            root.appendChild(child);
+            const node = document.createElement(tag);
+
+            if (path.length === TOPLEVEL) {
+                root.appendChild(node);
+            }
 
             return function (children) {
-                children.forEach(function (it) {
-                    child.appendChild(it);
+                children.forEach(function (child) {
+                    node.appendChild(child);
                 });
+                return node;
             };
         }
         case TEXT_NODE: {
             const node = document.createTextNode(tag);
-            if (isTopLevel) {
+            if (path.length === TOPLEVEL) {
                 root.appendChild(node);
             }
+
             return node;
         }
         }

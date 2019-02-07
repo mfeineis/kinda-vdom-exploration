@@ -100,10 +100,10 @@ function extractTagMeta(tagName) {
 function configureRenderer() {
 
     // FIXME: Remove Recursion!
-    function traverse(driver, expr, isTopLevel) {
+    function traverse(driver, expr, path) {
 
         if (isString(expr)) {
-            return driver.visit(expr, null, TEXT_NODE, isTopLevel);
+            return driver.visit(expr, null, TEXT_NODE, path);
         }
 
         if (!isArray(expr)) {
@@ -112,16 +112,16 @@ function configureRenderer() {
 
         if (isArray(expr[FIRST])) {
             return driver.reduce(
-                expr.map(function (it) {
-                    return traverse(driver, it);
+                expr.map(function (it, i) {
+                    return traverse(driver, it, path.concat([i]));
                 })
             );
         }
 
         if (expr[FIRST] === "") {
             return driver.reduce(
-                expr.map(function (it) {
-                    return traverse(driver, it);
+                expr.map(function (it, i) {
+                    return traverse(driver, it, path.concat([i]));
                 })
             );
         }
@@ -137,7 +137,7 @@ function configureRenderer() {
         const isSpecial = specialResult[FIRST];
         const specialNodeType = specialResult[SECOND];
         if (isSpecial) {
-            return driver.visit(tagName, null, specialNodeType, isTopLevel);
+            return driver.visit(tagName, null, specialNodeType, path);
         }
 
         const metaResult = extractTagMeta(tagName);
@@ -148,14 +148,14 @@ function configureRenderer() {
             assembleProps(id, classNames, hasProps ? maybeProps : {});
 
         if (isFunction(tag)) {
-            return traverse(driver, tag.call(null, props, children));
+            return traverse(driver, tag.call(null, props, children), path);
         }
 
-        const finalize = driver.visit(tag, props, ELEMENT_NODE, isTopLevel);
+        const finalize = driver.visit(tag, props, ELEMENT_NODE, path);
 
         if (isFunction(finalize)) {
-            return finalize(children.map(function (it) {
-                return traverse(driver, it);
+            return finalize(children.map(function (it, i) {
+                return traverse(driver, it, path.concat([i]));
             }));
         }
 
@@ -173,7 +173,7 @@ function configureRenderer() {
             "Please provide a valid expression"
         );
 
-        return traverse(drive(root), expr, true);
+        return traverse(drive(root), expr, [FIRST]);
     }
 
     return render;
