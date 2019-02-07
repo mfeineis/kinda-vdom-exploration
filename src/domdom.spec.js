@@ -1,5 +1,3 @@
-/* eslint-disable max-len, no-magic-numbers */
-
 const pkg = require("../package.json");
 
 const DomDom = require("./domdom");

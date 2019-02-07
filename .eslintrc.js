@@ -1,19 +1,19 @@
 /* eslint-disable capitalized-comments, max-len */
 module.exports = {
+    "extends": [
+        "eslint:recommended",
+        "plugin:jest/recommended",
+    ],
     "env": {
         "browser": true,
-        "commonjs": true,
-        "jest/globals": true,
-        "node": true
+        "commonjs": true
     },
-    "extends": "eslint:recommended",
     "parserOptions": {
-        "ecmaVersion": 2017,
+        "ecmaVersion": 5,
         "sourceType": "module"
     },
     "plugins": [
-        "immutable",
-        "jest"
+        "immutable"
     ],
     "root": true,
     "rules": {
@@ -30,11 +30,6 @@ module.exports = {
             "error",
             4
         ],
-        "jest/no-disabled-tests": "warn",
-        "jest/no-focused-tests": "error",
-        "jest/no-identical-title": "error",
-        "jest/prefer-to-have-length": "warn",
-        "jest/valid-expect": "error",
         "line-comment-position": 2,
         "linebreak-style": [
             "error",
@@ -63,5 +58,35 @@ module.exports = {
             "always"
         ],
         "sort-keys": 2
-    }
+    },
+    "overrides": [
+        {
+            "env": {
+                "commonjs": true,
+                "es6": true,
+                "node": true
+            },
+            "files": [
+                "rollup.config.js",
+                "stryker.conf.js",
+                "src/*.spec.js",
+            ],
+            "parserOptions": {
+                "ecmaVersion": 2017,
+                "sourceType": "module"
+            },
+            "plugins": [
+                "jest"
+            ],
+            "rules": {
+                "jest/no-disabled-tests": "warn",
+                "jest/no-focused-tests": "error",
+                "jest/no-identical-title": "error",
+                "jest/prefer-to-have-length": "warn",
+                "jest/valid-expect": "error",
+                "max-len": 0,
+                "no-magic-numbers": 0,
+            }
+        },
+    ],
 };

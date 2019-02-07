@@ -1,5 +1,3 @@
-/* eslint-disable capitalized-comments, max-len, no-magic-numbers */
-
 const pkg = require("../package.json");
 
 const DomDom = require("./domdom");
@@ -257,7 +255,7 @@ describe("domdom-dom", () => {
             });
 
             /*
-            it("should be able to render expressions with all kinds of children", () => {
+            It("should be able to render expressions with all kinds of children", () => {
                 const root = makeRoot();
 
                 render(root, ["div", ["b", "Bold!"], "Normal", ["i", "Italics!"]]);

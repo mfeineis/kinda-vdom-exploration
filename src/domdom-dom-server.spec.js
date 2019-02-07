@@ -1,6 +1,3 @@
-/* global Promise */
-/* eslint-disable max-len, no-magic-numbers */
-
 const validateHtml = require("html5-validator");
 
 const pkg = require("../package.json");
