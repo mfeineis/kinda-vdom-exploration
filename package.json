@@ -39,7 +39,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mfeineis/kinda-vdom-exploration.git"
+    "url": "git+https://github.com/mfeineis/aydin.git"
   },
   "keywords": [
     "vdom",
@@ -49,9 +49,9 @@
   "author": "Martin Feineis",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/mfeineis/kinda-vdom-exploration/issues"
+    "url": "https://github.com/mfeineis/aydin/issues"
   },
-  "homepage": "https://github.com/mfeineis/kinda-vdom-exploration#readme",
+  "homepage": "https://github.com/mfeineis/aydin#readme",
   "devDependencies": {
     "cypress": "^3.1.4",
     "eslint": "^5.12.1",
