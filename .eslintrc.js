@@ -5,7 +5,6 @@ module.exports = {
         "plugin:jest/recommended",
     ],
     "env": {
-        "browser": true,
         "commonjs": true
     },
     "parserOptions": {
@@ -13,11 +12,13 @@ module.exports = {
         "sourceType": "module"
     },
     "plugins": [
+        "compat",
         "immutable"
     ],
     "root": true,
     "rules": {
         "capitalized-comments": 2,
+        "compat/compat": "error",
         "immutable/no-let": 2,
         "immutable/no-this": 2,
         "immutable/no-mutation": ["error", {
@@ -62,7 +63,6 @@ module.exports = {
     "overrides": [
         {
             "env": {
-                "commonjs": true,
                 "es6": true,
                 "node": true
             },
@@ -79,6 +79,7 @@ module.exports = {
                 "jest"
             ],
             "rules": {
+                "compat/compat": 0,
                 "jest/no-disabled-tests": "warn",
                 "jest/no-focused-tests": "error",
                 "jest/no-identical-title": "error",
