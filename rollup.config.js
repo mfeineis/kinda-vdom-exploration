@@ -5,15 +5,17 @@ import { terser } from "rollup-plugin-terser";
 const production = !process.env.ROLLUP_WATCH;
 const terserOptions = {
     ecma: 5,
+    toplevel: true,
+    warnings: true,
 };
 
 export default [
     {
-        input: "src/domdom.js",
+        input: "src/aydin.js",
         output: {
-            file: "dist/domdom.js",
+            file: "dist/aydin.js",
             format: "umd",
-            name: "DomDom",
+            name: "Aydin",
             sourcemap: true,
         },
         plugins: [
@@ -23,11 +25,11 @@ export default [
         ],
     },
     {
-        input: "src/domdom-dom.js",
+        input: "src/aydin-dom.js",
         output: {
-            file: "dist/domdom-dom.js",
+            file: "dist/aydin-dom.js",
             format: "umd",
-            name: "DomDomDom",
+            name: "AydinDom",
             sourcemap: true,
         },
         plugins: [
@@ -37,11 +39,11 @@ export default [
         ],
     },
     {
-        input: "src/domdom-dom-server.js",
+        input: "src/aydin-dom-server.js",
         output: {
-            file: "dist/domdom-dom-server.js",
+            file: "dist/aydin-dom-server.js",
             format: "umd",
-            name: "DomDomDomServer",
+            name: "AydinDomServer",
             sourcemap: true,
         },
         plugins: [

@@ -1,4 +1,4 @@
-# kinda-vdom-exploration
+# aydin
 This is an exploration in creating an easy to use kind of Virtual DOM library.
 
 ## Goals

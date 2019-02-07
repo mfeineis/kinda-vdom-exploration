@@ -1,7 +1,7 @@
 const pkg = require("../package.json");
 
-const DomDom = require("./domdom");
-const DomDomDom = require("./domdom-dom");
+const Aydin = require("./aydin");
+const AydinDom = require("./aydin-dom");
 
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
@@ -94,13 +94,13 @@ const makeRoot = () => {
 
 const html = (items) => items.map((it) => it.trim()).join("");
 
-describe("domdom-dom", () => {
-    const { configureRenderer } = DomDom;
-    const driver = DomDomDom;
+describe("aydin-dom", () => {
+    const { configureRenderer } = Aydin;
+    const driver = AydinDom;
     const baseRender = configureRenderer();
     const render = (root, it) => baseRender(driver, it, root);
 
-    describe("the 'domdom-dom' driver", () => {
+    describe("the 'aydin-dom' driver", () => {
 
         it("should be a function with arity 2", () => {
             expect(typeof driver).toBe("function");

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>DomDom Playground</title>
+    <title>Aydin Playground</title>
     <style>
 
      pre {
@@ -36,16 +36,14 @@
     </style>
 </head>
 <body>
-    <h1>DomDom Usage Samples</h1>
+    <h1>Aydin Usage Samples</h1>
 
     <div id="root"></div>
 
-    <script src="dist/domdom.js"></script>
-    <script src="dist/domdom-dom.js"></script>
-    <script src="dist/domdom-dom-server.js"></script>
+    <script src="dist/aydin.js"></script>
+    <script src="dist/aydin-dom.js"></script>
+    <script src="dist/aydin-dom-server.js"></script>
     <script>
-
-     const render = DomDom.configureRenderer();
 
      const makeSample = function (title, data) {
          console.log("makeSample", title, data);
@@ -53,7 +51,7 @@
 
          const node = document.createElement("div");
          node.id = "sample" + makeSample.count;
-         const code = render(DomDomDomServer, data);
+         const code = Aydin.render(AydinDomServer, data);
          node.innerHTML = "<h2>" + title + "</h2>" +
             "<pre>" + JSON.stringify(data) + "</pre>" +
             "<div class='sample'>" + code + "</div>";
@@ -98,10 +96,10 @@
      {
         const node = document.createElement("div");
         const expr = ["span", "Hello, real DOM!"];
-        render(DomDomDom, expr, node);
+        Aydin.render(AydinDom, expr, node);
 
         const pre = document.createElement("pre");
-        pre.innerText = render(DomDomDomServer, expr);
+        pre.innerText = Aydin.render(AydinDomServer, expr);
         node.appendChild(pre);
 
         document.body.appendChild(node);

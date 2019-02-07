@@ -1,11 +1,11 @@
 const pkg = require("../package.json");
 
-const DomDom = require("./domdom");
+const Aydin = require("./aydin");
 
-describe("domdom", () => {
+describe("Aydin", () => {
 
     it("should export something", () => {
-        expect(DomDom).toBeDefined();
+        expect(Aydin).toBeDefined();
     });
 
     describe("the development utilities in use", () => {
@@ -17,14 +17,14 @@ describe("domdom", () => {
     });
 
     it("should export the proper 'version' string matching the package version", () => {
-        expect(DomDom.version).toBe(pkg.version);
+        expect(Aydin.version).toBe(pkg.version);
     });
 
     describe("the main exported 'render' function", () => {
 
         it("should actually be a function with an arity of 3", () => {
-            expect(typeof DomDom.render).toBe("function");
-            expect(DomDom.render).toHaveLength(3);
+            expect(typeof Aydin.render).toBe("function");
+            expect(Aydin.render).toHaveLength(3);
         });
 
     });
@@ -43,7 +43,7 @@ describe("domdom", () => {
                 }
             },
         });
-        const { configureRenderer } = DomDom;
+        const { configureRenderer } = Aydin;
 
         it("should be a function", () => {
             expect(configureRenderer).toBeInstanceOf(Function);

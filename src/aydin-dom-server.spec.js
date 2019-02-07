@@ -2,15 +2,15 @@ const validateHtml = require("html5-validator");
 
 const pkg = require("../package.json");
 
-const DomDom = require("./domdom");
-const DomDomDomServer = require("./domdom-dom-server");
+const Aydin = require("./aydin");
+const AydinDomServer = require("./aydin-dom-server");
 
 class InvariantViolation extends Error {}
 const noop = () => {};
 
 const makeTestUtils = (reportViolation = noop, checkEnv = noop) => {
     // eslint-disable-next-line no-console
-    const trace = (...args) => console.log("[test:domdom]", ...args);
+    const trace = (...args) => console.log("[test:aydin]", ...args);
     return {
         checkEnvironment: checkEnv,
         invariant: (condition, message) => {
@@ -23,14 +23,14 @@ const makeTestUtils = (reportViolation = noop, checkEnv = noop) => {
     };
 };
 
-describe("domdom-dom-server", () => {
-    const { configureRenderer } = DomDom;
+describe("aydin-dom-server", () => {
+    const { configureRenderer } = Aydin;
     const utils = makeTestUtils();
-    const driver = DomDomDomServer;
+    const driver = AydinDomServer;
     const baseRender = configureRenderer(utils);
     const render = (it) => baseRender(driver, it);
 
-    describe("the 'domdom-dom-server' driver", () => {
+    describe("the 'aydin-dom-server' driver", () => {
 
         it("should be a function with arity 0", () => {
             expect(typeof driver).toBe("function");

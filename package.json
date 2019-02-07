@@ -1,5 +1,5 @@
 {
-  "name": "kinda-vdom-exploration",
+  "name": "aydin",
   "version": "0.1.0",
   "description": "An exploration in using a Lisp-y kind of VDOM",
   "main": "index.js",
