@@ -1,15 +1,14 @@
-const {
-    ELEMENT_NODE,
-    TEXT_NODE,
-    DOCUMENT_TYPE_NODE,
-} = require("./constants");
-const {
-    invariant,
-    isArray,
-    isFunction,
-    isObject,
-    isString,
-} = require("./utils");
+const constants = require("./constants");
+const DOCUMENT_TYPE_NODE = constants.DOCUMENT_TYPE_NODE;
+const ELEMENT_NODE = constants.ELEMENT_NODE;
+const TEXT_NODE = constants.TEXT_NODE;
+
+const utils = require("./utils");
+const invariant = utils.invariant;
+const isArray = utils.isArray;
+const isFunction = utils.isFunction;
+const isObject = utils.isObject;
+const isString = utils.isString;
 
 const slice = [].slice;
 
@@ -180,11 +179,8 @@ function configureRenderer() {
     return render;
 }
 
-// FIXME: Make this eslint rule work with `module.exports`
-// eslint-disable-next-line immutable/no-mutation
-module.exports = {
-    configureRenderer,
-    render: configureRenderer(),
-    version: "0.1.0",
-};
-
+/* eslint-disable immutable/no-mutation */
+exports.configureRenderer = configureRenderer;
+exports.render = configureRenderer();
+exports.version = "0.1.0";
+/* eslint-enable immutable/no-mutation */

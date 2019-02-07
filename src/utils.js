@@ -1,7 +1,6 @@
-const {
-    DOCUMENT_TYPE_NODE,
-    INVALID_NODE,
-} = require("./constants");
+const constants = require("./constants");
+const DOCUMENT_TYPE_NODE = constants.DOCUMENT_TYPE_NODE;
+const INVALID_NODE = constants.INVALID_NODE;
 
 function invariant(condition, message) {
     if (!condition) {
@@ -111,12 +110,12 @@ function isValidTagName(tagName) {
         !hasConsecutive;
 }
 
-// eslint-disable-next-line immutable/no-mutation
-module.exports = {
-    invariant,
-    isArray,
-    isFunction,
-    isObject,
-    isSpecialTag,
-    isString,
-};
+/* eslint-disable immutable/no-mutation */
+exports.invariant = invariant;
+exports.isArray = isArray;
+exports.isFunction = isFunction;
+exports.isObject = isObject;
+exports.isSpecialTag = isSpecialTag;
+exports.isString = isString;
+/* eslint-enable immutable/no-mutation */
+

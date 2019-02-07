@@ -1,15 +1,14 @@
-const {
-    DOCUMENT_TYPE_NODE,
-    ELEMENT_NODE,
-    INVALID_NODE,
-    TEXT_NODE,
-} = require("./constants");
-const {
-    isArray,
-    isObject,
-    isSpecialTag,
-    isString,
-} = require("./utils");
+const constants = require("./constants");
+const DOCUMENT_TYPE_NODE = constants.DOCUMENT_TYPE_NODE;
+const ELEMENT_NODE = constants.ELEMENT_NODE;
+const INVALID_NODE = constants.INVALID_NODE;
+const TEXT_NODE = constants.TEXT_NODE;
+
+const utils = require("./utils");
+const isArray = utils.isArray;
+const isObject = utils.isObject;
+const isSpecialTag = utils.isSpecialTag;
+const isString = utils.isString;
 
 const voidElementLookup = {
     area: true,
