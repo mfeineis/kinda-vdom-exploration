@@ -27,10 +27,31 @@ function driver(root) {
             Object.keys(props).forEach(function (key) {
                 const value = props[key];
 
-                if (key === "classList") {
-                    // eslint-disable-next-line immutable/no-mutation
-                    node.className = value.join(" ");
+                if (/^on/.test(key)) {
+                    // FIXME: Attach event handlers!
+                    return;
                 }
+
+                /* eslint-disable immutable/no-mutation */
+                switch (key) {
+                case "classList":
+                    // Not using `classList` property because IE11 doesn't
+                    // support it for SVG elements
+                    node.className = value.join(" ");
+                    break;
+                case "data":
+                    Object.keys(value).sort().forEach(function (name) {
+                        node["data-" + name] = value[name];
+                    });
+                    break;
+                case "id":
+                    node.id = value;
+                    break;
+                default:
+                    node[key] = value;
+                    break;
+                }
+                /* eslint-enable immutable/no-mutation */
             });
 
             if (path.length === TOPLEVEL) {

@@ -39,7 +39,18 @@ const makeRoot = () => {
         }).join("");
 
         if (self && self.nodeName) {
-            const attrs = self.className ? ` class="${self.className}"` : "";
+            const attrs = self._properties.map(([key, value]) => {
+                if (typeof value === "boolean") {
+                    if (value) {
+                        return ` ${key}`;
+                    }
+                    return "";
+                }
+                if (typeof value === "string") {
+                    return ` ${key}=${JSON.stringify(value)}`;
+                }
+                return ` ${key}='${JSON.stringify(value)}'`;
+            }).join("");
             return [
                 `<${self.nodeName}${attrs}>`,
                 children,
@@ -54,8 +65,18 @@ const makeRoot = () => {
         createElement: (nodeName) => {
             const nodeState = {
                 childNodes: [],
+                propertyNameLookup: new Set(),
+                propertyValues: new Map(),
             };
-            const node = {
+            const node = Object.freeze({
+                get _properties() {
+                    return Array.from(nodeState.propertyNameLookup).sort().map((key) => {
+                        return [
+                            key.replace(/^className$/, "class"),
+                            nodeState.propertyValues.get(key),
+                        ];
+                    });
+                },
                 appendChild: (child) => {
                     nodeState.childNodes.push(child);
                 },
@@ -64,8 +85,22 @@ const makeRoot = () => {
                 },
                 nodeName,
                 ownerDocument,
-            };
-            return node;
+            });
+            return new Proxy(node, {
+                get(target, key) {
+                    if (nodeState.propertyNameLookup.has(key)) {
+                        return nodeState.propertyValues.get(key);
+                    }
+                    return target[key];
+                },
+                has(_, key) {
+                    return nodeState.propertyNameLookup.has(key);
+                },
+                set(_, key, value) {
+                    nodeState.propertyNameLookup.add(key);
+                    nodeState.propertyValues.set(key, value);
+                },
+            });
         },
         createTextNode: (textContent) => {
             const node = Object.freeze({
@@ -305,7 +340,7 @@ describe("aydin-dom", () => {
 
         });
 
-        it("should apply simple props", () => {
+        it("should apply CSS classes", () => {
             const root = makeRoot();
 
             render(root, ["button", {
@@ -318,11 +353,90 @@ describe("aydin-dom", () => {
                 className: "btn",
             }, "Click Me!"]);
 
-            expect(root.innerHTML).toEqual(html([
+            expect(root.innerHTML).toBe(html([
                 "<button class=\"active btn btn-default btn-sm text-size-sm\">",
                 "  Click Me!",
                 "</button>",
             ]));
+        });
+
+        it("should apply an ID prop", () => {
+            const root = makeRoot();
+
+            render(root, ["div#some-id", "Bam!"]);
+
+            expect(root.innerHTML).toBe(html([
+                "<div id=\"some-id\">Bam!</div>"
+            ]));
+        });
+
+        describe("'data-' properties", () => {
+
+            it("should support plain 'data-id' property names", () => {
+                const root = makeRoot();
+
+                render(root, ["i", {
+                    "data-id": "boring",
+                }]);
+
+                expect(root.innerHTML).toBe(html([
+                    "<i data-id=\"boring\"></i>",
+                ]));
+            });
+
+            it("should support a special 'data' prop for convenience", () => {
+                const root = makeRoot();
+                render(
+                    root,
+                    ["i", {
+                        data: {
+                            id: "interesting",
+                            key: "whoohooo!",
+                        },
+                    }]
+                );
+                expect(root.innerHTML).toBe(html([
+                    "<i data-id=\"interesting\" data-key=\"whoohooo!\"></i>",
+                ]));
+            });
+
+            it("should sort the data properties", () => {
+                const root = makeRoot();
+                render(
+                    root,
+                    ["i", {
+                        data: {
+                            config: {
+                                answer: 42,
+                                some: "value",
+                            },
+                            key: "whoohooo!",
+                            // eslint-disable-next-line sort-keys
+                            id: "interesting",
+                        },
+                    }]
+                );
+                expect(root.innerHTML).toBe(html([
+                    "<i data-config='{\"answer\":42,\"some\":\"value\"}' data-id=\"interesting\" data-key=\"whoohooo!\"></i>",
+                ]));
+            });
+
+            it("should set properties other than event handlers", () => {
+                const root = makeRoot();
+                render(root, ["i", { "role": "button" }, "Buttonic!"]);
+                expect(root.innerHTML).toBe(html([
+                    "<i role=\"button\">Buttonic!</i>",
+                ]));
+            });
+
+            it("should support boolean props", () => {
+                const root = makeRoot();
+                render(root, ["i", { disabled: true }, "Disabled!"]);
+                expect(root.innerHTML).toBe(html([
+                    "<i disabled>Disabled!</i>",
+                ]));
+            });
+
         });
 
     });
