@@ -99,12 +99,12 @@ describe("Aydin", () => {
                 );
 
                 expect(log).toEqual([
-                    "0000: [0] ELEMENT_NODE <div>",
-                    "0001: [0,0] TEXT_NODE 'One'",
-                    "0002: [0,1] TEXT_NODE 'Two'",
-                    "0003: [0,2] ELEMENT_NODE <span>",
-                    "0004: [0,2,0] TEXT_NODE 'Three'",
-                    "0005: [0,2,1] TEXT_NODE 'Four'",
+                    "0000: [0] ELEMENT_NODE(1) <div>",
+                    "0001: [0,0] TEXT_NODE(3) 'One'",
+                    "0002: [0,1] TEXT_NODE(3) 'Two'",
+                    "0003: [0,2] ELEMENT_NODE(1) <span>",
+                    "0004: [0,2,0] TEXT_NODE(3) 'Three'",
+                    "0005: [0,2,1] TEXT_NODE(3) 'Four'",
                 ]);
 
             });

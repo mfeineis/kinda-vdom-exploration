@@ -315,13 +315,13 @@ describe("aydin-dom", () => {
                 );
 
                 expect(log).toEqual([
-                    "0000: [0] ELEMENT_NODE <div>",
-                    "0001: [0,0] TEXT_NODE 'One'",
-                    "0002: [0,1] TEXT_NODE 'Two'",
-                    "0003: [0,2] ELEMENT_NODE <b>",
-                    "0004: [0,2,0] TEXT_NODE 'Bold!'",
-                    "0005: [0,3] TEXT_NODE 'Four'",
-                    "0006: [0,4] TEXT_NODE 'Five'",
+                    "0000: [0] ELEMENT_NODE(1) <div>",
+                    "0001: [0,0] TEXT_NODE(3) 'One'",
+                    "0002: [0,1] TEXT_NODE(3) 'Two'",
+                    "0003: [0,2] ELEMENT_NODE(1) <b>",
+                    "0004: [0,2,0] TEXT_NODE(3) 'Bold!'",
+                    "0005: [0,3] TEXT_NODE(3) 'Four'",
+                    "0006: [0,4] TEXT_NODE(3) 'Five'",
                 ]);
 
                 expect(root.innerHTML).toBe(html([

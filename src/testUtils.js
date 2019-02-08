@@ -19,12 +19,12 @@ const tracable = (drive, trace) => (...args) => {
             switch (nodeType) {
             case 1:
                 trace.push(
-                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] ELEMENT_NODE <${expr}>`
+                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] ELEMENT_NODE(${nodeType}) <${expr}>`
                 );
                 break;
             case 3:
                 trace.push(
-                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] TEXT_NODE '${expr}'`
+                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] TEXT_NODE(${nodeType}) '${expr}'`
                 );
                 break;
             }
