@@ -360,10 +360,20 @@ describe("aydin-dom", () => {
             ]));
         });
 
-        it("should apply an ID prop", () => {
+        it("should apply an Emmett-style ID prop", () => {
             const root = makeRoot();
 
             render(root, ["div#some-id", "Bam!"]);
+
+            expect(root.innerHTML).toBe(html([
+                "<div id=\"some-id\">Bam!</div>"
+            ]));
+        });
+
+        it("should apply a plain ID prop", () => {
+            const root = makeRoot();
+
+            render(root, ["div", { id: "some-id" }, "Bam!"]);
 
             expect(root.innerHTML).toBe(html([
                 "<div id=\"some-id\">Bam!</div>"
