@@ -393,7 +393,7 @@ describe("aydin-dom-server", () => {
 
     describe("using code templates", () => {
 
-        it("should support functions acting as templates simple templates", () => {
+        it("should support functions acting as simple templates", () => {
 
             function tmpl(props, children) {
                 expect(typeof props).toBe("object");
