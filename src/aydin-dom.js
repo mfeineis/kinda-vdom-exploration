@@ -20,6 +20,11 @@ function driver(root) {
     const document = root.ownerDocument;
 
     function visit(tag, props, nodeType, path) {
+        if (nodeType === INVALID_NODE) {
+            // TODO: Should we really panic on invalid tag names?
+            throw new Error("Invalid tag name \"" + tag + "\"");
+        }
+
         switch (nodeType) {
         case ELEMENT_NODE: {
             const node = document.createElement(tag);
