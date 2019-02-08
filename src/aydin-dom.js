@@ -40,9 +40,11 @@ function driver(root) {
                 /* eslint-disable immutable/no-mutation */
                 switch (key) {
                 case "classList":
-                    // Not using `classList` property because IE11 doesn't
-                    // support it for SVG elements
-                    node.className = value.join(" ");
+                    if (value.length) {
+                        // Not using `classList` property because IE11 doesn't
+                        // support it for SVG elements
+                        node.className = value.join(" ");
+                    }
                     break;
                 case "data":
                     Object.keys(value).forEach(function (name) {
