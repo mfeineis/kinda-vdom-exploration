@@ -65,23 +65,34 @@ const makeRoot = () => {
         createElement: (nodeName) => {
             const nodeState = {
                 childNodes: [],
+                dataset: Object.create(null),
                 propertyNameLookup: new Set(),
                 propertyValues: new Map(),
             };
             const node = Object.freeze({
                 get _properties() {
-                    return Array.from(nodeState.propertyNameLookup).sort().map((key) => {
+                    const dataProps = [];
+                    Object.keys(nodeState.dataset).forEach((key) => {
+                        dataProps.push([`data-${key}`, nodeState.dataset[key]]);
+                    });
+                    const props = Array.from(nodeState.propertyNameLookup).map((key) => {
                         return [
                             key.replace(/^className$/, "class"),
                             nodeState.propertyValues.get(key),
                         ];
                     });
+                    return dataProps.concat(props).sort(([a], [b]) => {
+                        return a < b ? -1 : a > b ? 1 : 0;
+                    });
                 },
-                appendChild: (child) => {
+                appendChild(child) {
                     nodeState.childNodes.push(child);
                 },
                 get childNodes() {
                     return nodeState.childNodes;
+                },
+                get dataset() {
+                    return nodeState.dataset;
                 },
                 nodeName,
                 ownerDocument,
@@ -444,6 +455,15 @@ describe("aydin-dom", () => {
                 render(root, ["i", { disabled: true }, "Disabled!"]);
                 expect(root.innerHTML).toBe(html([
                     "<i disabled>Disabled!</i>",
+                ]));
+            });
+
+            it("should support a mix of 'data' and other props", () => {
+                const root = makeRoot();
+                // eslint-disable-next-line sort-keys
+                render(root, ["i", { data: { key: "some-key"}, class: { "hello": 1 } }]);
+                expect(root.innerHTML).toBe(html([
+                    "<i class=\"hello\" data-key=\"some-key\"></i>",
                 ]));
             });
 

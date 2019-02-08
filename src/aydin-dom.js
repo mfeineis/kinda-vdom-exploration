@@ -40,8 +40,8 @@ function driver(root) {
                     node.className = value.join(" ");
                     break;
                 case "data":
-                    Object.keys(value).sort().forEach(function (name) {
-                        node["data-" + name] = value[name];
+                    Object.keys(value).forEach(function (name) {
+                        node.dataset[name] = value[name];
                     });
                     break;
                 default:
