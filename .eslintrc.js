@@ -17,7 +17,6 @@ module.exports = {
     ],
     "root": true,
     "rules": {
-        "capitalized-comments": 2,
         "compat/compat": "error",
         "immutable/no-let": 2,
         "immutable/no-this": 2,
