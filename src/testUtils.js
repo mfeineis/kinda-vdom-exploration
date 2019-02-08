@@ -33,7 +33,169 @@ const tracable = (drive, trace) => (...args) => {
     };
 };
 
+function range(count, step = 1) {
+    const result = [];
+    // eslint-disable-next-line immutable/no-let
+    let i = 0;
+    while (i < count) {
+        result.push(i * step);
+        i += 1;
+    }
+    return result;
+}
+
+function makeRoot() {
+
+    const voidElementLookup = {
+        area: true,
+        base: true,
+        br: true,
+        col: true,
+        embed: true,
+        hr: true,
+        img: true,
+        input: true,
+        link: true,
+        meta: true,
+        param: true,
+        source: true,
+        track: true,
+        wbr: true,
+    };
+
+    const walk = (self, nodes) => {
+        if (typeof self === "string") {
+            return self;
+        }
+
+        if (self && self.textContent) {
+            return self.textContent;
+        }
+
+        const children = nodes.map((child) => {
+            if (child && child.childNodes) {
+                return walk(child, child.childNodes);
+            }
+
+            return walk(child, []);
+        }).join("");
+
+        if (self && self.nodeName) {
+            const attrs = self._properties.map(([key, value]) => {
+                if (typeof value === "boolean") {
+                    if (value) {
+                        return ` ${key}`;
+                    }
+                    return "";
+                }
+                if (typeof value === "string") {
+                    return ` ${key}=${JSON.stringify(value)}`;
+                }
+                return ` ${key}='${JSON.stringify(value)}'`;
+            }).join("");
+
+            if (voidElementLookup[self.nodeName]) {
+                return `<${self.nodeName}${attrs}/>`;
+            }
+
+            return [
+                `<${self.nodeName}${attrs}>`,
+                children,
+                `</${self.nodeName}>`,
+            ].join("");
+        }
+
+        return children;
+    };
+
+    const ownerDocument = Object.freeze({
+        createElement: (nodeName) => {
+            const nodeState = {
+                childNodes: [],
+                dataset: Object.create(null),
+                propertyNameLookup: new Set(),
+                propertyValues: new Map(),
+            };
+            const node = Object.freeze({
+                get _properties() {
+                    const dataProps = [];
+                    Object.keys(nodeState.dataset).forEach((key) => {
+                        dataProps.push([`data-${key}`, nodeState.dataset[key]]);
+                    });
+                    const props = Array.from(nodeState.propertyNameLookup).map((key) => {
+                        return [
+                            key.replace(/^className$/, "class"),
+                            nodeState.propertyValues.get(key),
+                        ];
+                    });
+                    return dataProps.concat(props).sort(([a], [b]) => {
+                        return a < b ? -1 : a > b ? 1 : 0;
+                    });
+                },
+                appendChild(child) {
+                    nodeState.childNodes.push(child);
+                },
+                get childNodes() {
+                    return nodeState.childNodes;
+                },
+                get dataset() {
+                    return nodeState.dataset;
+                },
+                nodeName,
+                ownerDocument,
+            });
+            return new Proxy(node, {
+                get(target, key) {
+                    if (nodeState.propertyNameLookup.has(key)) {
+                        return nodeState.propertyValues.get(key);
+                    }
+                    return target[key];
+                },
+                has(_, key) {
+                    return nodeState.propertyNameLookup.has(key);
+                },
+                set(_, key, value) {
+                    nodeState.propertyNameLookup.add(key);
+                    nodeState.propertyValues.set(key, value);
+                },
+            });
+        },
+        createTextNode: (textContent) => {
+            const node = Object.freeze({
+                ownerDocument,
+                textContent,
+            });
+            return node;
+        },
+    });
+    const rootState = {
+        childNodes: [],
+    };
+    return {
+        appendChild: (node) => {
+            rootState.childNodes.push(node);
+        },
+        get childNodes() {
+            return rootState.childNodes;
+        },
+        get debug() {
+            return JSON.stringify(rootState, null, "  ");
+        },
+        get innerHTML() {
+            return walk(null, rootState.childNodes);
+        },
+        ownerDocument,
+    };
+}
+
+function html(items) {
+    return items.map((it) => it.trim()).join("");
+}
+
 /* eslint-disable immutable/no-mutation */
+exports.html = html;
 exports.identityDriver = identityDriver;
+exports.makeRoot = makeRoot;
+exports.range = range;
 exports.tracable = tracable;
 /* eslint-enable immutable/no-mutation */
