@@ -44,9 +44,6 @@ function driver(root) {
                         node["data-" + name] = value[name];
                     });
                     break;
-                case "id":
-                    node.id = value;
-                    break;
                 default:
                     node[key] = value;
                     break;
