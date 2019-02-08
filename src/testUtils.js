@@ -129,7 +129,7 @@ function makeRoot() {
                         ];
                     });
                     return dataProps.concat(props).sort(([a], [b]) => {
-                        return a < b ? -1 : a > b ? 1 : 0;
+                        return a <= b ? -1 : 1;
                     });
                 },
                 appendChild(child) {
@@ -145,15 +145,6 @@ function makeRoot() {
                 ownerDocument,
             });
             return new Proxy(node, {
-                get(target, key) {
-                    if (nodeState.propertyNameLookup.has(key)) {
-                        return nodeState.propertyValues.get(key);
-                    }
-                    return target[key];
-                },
-                has(_, key) {
-                    return nodeState.propertyNameLookup.has(key);
-                },
                 set(_, key, value) {
                     nodeState.propertyNameLookup.add(key);
                     nodeState.propertyValues.set(key, value);
@@ -174,12 +165,6 @@ function makeRoot() {
     return {
         appendChild: (node) => {
             rootState.childNodes.push(node);
-        },
-        get childNodes() {
-            return rootState.childNodes;
-        },
-        get debug() {
-            return JSON.stringify(rootState, null, "  ");
         },
         get innerHTML() {
             return walk(null, rootState.childNodes);
