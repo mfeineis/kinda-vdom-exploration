@@ -96,11 +96,11 @@
      {
         const node = document.createElement("div");
         const expr =
-            ["span",
+            ["div",
                 "Hello, real DOM!",
-                ["div",
+                ["div", { "class": "text-color-red", data: { id: "ID" } },
                     ["ol", ["li", "1st"], ["li", "2nd"]],
-                    ["p", "With some text"]
+                    ["p", { "class": { "font-weight-bold": 1 } },  "With some bold text"]
                 ]
             ];
         Aydin.render(AydinDom, expr, node);
