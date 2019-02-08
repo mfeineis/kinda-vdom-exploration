@@ -46,8 +46,8 @@ function serialize(value) {
 
 /**
  * @example
- *     spreadProps({ classList: ["b", "a"] }) // => " class=\"a b\""
- *     spreadProps({ c: "d", a: "b" }) // => " a=\"b\" c=\"d\""
+ *     spreadProps({ classList: ["a", "b"] }) // => " class=\"a b\""
+ *     spreadProps({ a: "b", c: "d" }) // => " a=\"b\" c=\"d\""
  *     spreadProps({ onClick: () => {} }) // => ""
  *     spreadProps([]) // => ""
  *     spreadProps(/regex/) // => ""
@@ -62,12 +62,7 @@ function spreadProps(props) {
         const value = props[key];
         if (key === "classList") {
             if (value.length) {
-                const cache = {};
-                value.forEach(function (name) {
-                    // eslint-disable-next-line immutable/no-mutation
-                    cache[name] = true;
-                });
-                return " class=\"" + Object.keys(cache).sort().join(" ") + "\"";
+                return " class=\"" + value.join(" ") + "\"";
             }
 
             return "";

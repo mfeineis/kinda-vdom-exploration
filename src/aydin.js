@@ -25,7 +25,7 @@ const TWO = 2;
  *     assembleProps("", ["X"], { className: "Y" })
  *     // => { classList: ["X", "Y"] }
  *     assembleProps("", ["X"], { class: "Z", className: "Y" })
- *     // => { classList: ["X", "Z", "Y"] }
+ *     // => { classList: ["X", "Y", "Z"] }
  */
 function assembleProps(id, classNames, props) {
     if (id) {
@@ -67,8 +67,13 @@ function assembleProps(id, classNames, props) {
     }
 
     if (classList.length) {
+        const cache = {};
+        classList.forEach(function (name) {
+            // eslint-disable-next-line immutable/no-mutation
+            cache[name] = true;
+        });
         // eslint-disable-next-line immutable/no-mutation
-        props.classList = classList;
+        props.classList = Object.keys(cache).sort();
     }
 
     return props;

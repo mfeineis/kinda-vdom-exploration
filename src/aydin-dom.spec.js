@@ -39,8 +39,9 @@ const makeRoot = () => {
         }).join("");
 
         if (self && self.nodeName) {
+            const attrs = self.className ? ` class="${self.className}"` : "";
             return [
-                `<${self.nodeName}>`,
+                `<${self.nodeName}${attrs}>`,
                 children,
                 `</${self.nodeName}>`,
             ].join("");
@@ -54,7 +55,7 @@ const makeRoot = () => {
             const nodeState = {
                 childNodes: [],
             };
-            const node = Object.freeze({
+            const node = {
                 appendChild: (child) => {
                     nodeState.childNodes.push(child);
                 },
@@ -63,7 +64,7 @@ const makeRoot = () => {
                 },
                 nodeName,
                 ownerDocument,
-            });
+            };
             return node;
         },
         createTextNode: (textContent) => {
@@ -302,6 +303,26 @@ describe("aydin-dom", () => {
                 ]));
             });
 
+        });
+
+        it("should apply simple props", () => {
+            const root = makeRoot();
+
+            render(root, ["button", {
+                class: {
+                    "text-size-sm": 1,
+                    // eslint-disable-next-line sort-keys
+                    "btn-sm": 1,
+                },
+                classList: ["btn-default", "active"],
+                className: "btn",
+            }, "Click Me!"]);
+
+            expect(root.innerHTML).toEqual(html([
+                "<button class=\"active btn btn-default btn-sm text-size-sm\">",
+                "  Click Me!",
+                "</button>",
+            ]));
         });
 
     });

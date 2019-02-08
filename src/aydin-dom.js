@@ -19,10 +19,19 @@ function driver(root) {
 
     const document = root.ownerDocument;
 
-    function visit(tag, _, nodeType, path) {
+    function visit(tag, props, nodeType, path) {
         switch (nodeType) {
         case ELEMENT_NODE: {
             const node = document.createElement(tag);
+
+            Object.keys(props).forEach(function (key) {
+                const value = props[key];
+
+                if (key === "classList") {
+                    // eslint-disable-next-line immutable/no-mutation
+                    node.className = value.join(" ");
+                }
+            });
 
             if (path.length === TOPLEVEL) {
                 root.appendChild(node);
