@@ -83,6 +83,14 @@ function spreadProps(props) {
             return " " + key + "='" + serialize(value) + "'";
         }
 
+        if (typeof value === "boolean") {
+            if (value) {
+                return " " + key;
+            }
+
+            return "";
+        }
+
         return " " + key + "=\"" + value + "\"";
     }).join("");
 }
