@@ -1,14 +1,14 @@
-const constants = require("./constants");
-const DOCUMENT_TYPE_NODE = constants.DOCUMENT_TYPE_NODE;
-const ELEMENT_NODE = constants.ELEMENT_NODE;
-const INVALID_NODE = constants.INVALID_NODE;
-const TEXT_NODE = constants.TEXT_NODE;
-
-const TOPLEVEL = 1;
-
 const utils = require("./utils");
+
+const DOCUMENT_TYPE_NODE = utils.DOCUMENT_TYPE_NODE;
+const ELEMENT_NODE = utils.ELEMENT_NODE;
+const INVALID_NODE = utils.INVALID_NODE;
+const TEXT_NODE = utils.TEXT_NODE;
+
 const invariant = utils.invariant;
 const isSpecialTag = utils.isSpecialTag;
+
+const TOPLEVEL = 1;
 
 function driver(root) {
 

@@ -1,6 +1,9 @@
-const constants = require("./constants");
-const DOCUMENT_TYPE_NODE = constants.DOCUMENT_TYPE_NODE;
-const INVALID_NODE = constants.INVALID_NODE;
+// https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
+
+const ELEMENT_NODE = 1;
+const TEXT_NODE = 3;
+const DOCUMENT_TYPE_NODE = 10;
+const INVALID_NODE = -100;
 
 function invariant(condition, message) {
     if (!condition) {
@@ -111,6 +114,11 @@ function isValidTagName(tagName) {
 }
 
 /* eslint-disable immutable/no-mutation */
+exports.ELEMENT_NODE = ELEMENT_NODE;
+exports.TEXT_NODE = TEXT_NODE;
+exports.DOCUMENT_TYPE_NODE = DOCUMENT_TYPE_NODE;
+exports.INVALID_NODE = INVALID_NODE;
+
 exports.invariant = invariant;
 exports.isArray = isArray;
 exports.isFunction = isFunction;

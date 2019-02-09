@@ -1,6 +1,6 @@
-const constants = require("./constants");
-const ELEMENT_NODE = constants.ELEMENT_NODE;
-const TEXT_NODE = constants.TEXT_NODE;
+const utils = require("./utils");
+const ELEMENT_NODE = utils.ELEMENT_NODE;
+const TEXT_NODE = utils.TEXT_NODE;
 
 const identityDriver = () => ({
     isSpecialTag: () => [false],
