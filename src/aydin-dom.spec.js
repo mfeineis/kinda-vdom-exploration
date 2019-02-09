@@ -15,12 +15,10 @@ const TEXT_NODE = 3;
 const FIRST = 0;
 
 describe("aydin-dom", () => {
-    const { configureRenderer } = Aydin;
     const driver = AydinDom;
-    const baseRender = configureRenderer();
-    const render = (root, it) => baseRender(driver, it, root);
+    const render = (root, it) => Aydin.render(driver(root), it);
     const traceRender = (root, log, it) => {
-        return baseRender(tracable(driver, log), it, root);
+        return Aydin.render(tracable(driver(root), log), it);
     };
 
     describe("the 'aydin-dom' driver", () => {

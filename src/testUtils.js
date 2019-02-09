@@ -2,8 +2,9 @@ const utils = require("./utils");
 const ELEMENT_NODE = utils.ELEMENT_NODE;
 const TEXT_NODE = utils.TEXT_NODE;
 
-const identityDriver = () => ({
+const identityDriver = Object.freeze({
     isSpecialTag: () => [false],
+    reduce: (children) => children,
     visit: (expr, _, nodeType) => {
         switch (nodeType) {
         case 1:
@@ -14,27 +15,25 @@ const identityDriver = () => ({
     },
 });
 
-const tracable = (drive, trace) => (...args) => {
-    const driver = drive(...args);
-    return {
-        isSpecialTag: (tag) => driver.isSpecialTag(tag),
-        visit: (expr, props, nodeType, path) => {
-            switch (nodeType) {
-            case 1:
-                trace.push(
-                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] ELEMENT_NODE(${nodeType}) <${expr}>`
-                );
-                break;
-            case 3:
-                trace.push(
-                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] TEXT_NODE(${nodeType}) '${expr}'`
-                );
-                break;
-            }
-            return driver.visit(expr, props, nodeType, path);
-        },
-    };
-};
+const tracable = (driver, trace) => Object.freeze({
+    isSpecialTag: (tag) => driver.isSpecialTag(tag),
+    reduce: (...args) => driver.reduce(...args),
+    visit: (expr, props, nodeType, path) => {
+        switch (nodeType) {
+        case 1:
+            trace.push(
+                `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] ELEMENT_NODE(${nodeType}) <${expr}>`
+            );
+            break;
+        case 3:
+            trace.push(
+                `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] TEXT_NODE(${nodeType}) '${expr}'`
+            );
+            break;
+        }
+        return driver.visit(expr, props, nodeType, path);
+    },
+});
 
 /**
  * @example

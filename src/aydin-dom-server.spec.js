@@ -14,10 +14,8 @@ const {
 } = require("./testUtils");
 
 describe("aydin-dom-server", () => {
-    const { configureRenderer } = Aydin;
     const driver = AydinDomServer;
-    const baseRender = configureRenderer();
-    const render = (it) => baseRender(driver, it);
+    const render = (it) => Aydin.render(driver(), it);
 
     describe("the 'aydin-dom-server' driver", () => {
 
@@ -47,17 +45,15 @@ describe("aydin-dom-server", () => {
 });
 
 describe("The traits that both the DOM and DOMServer driver share", () => {
-    const { configureRenderer } = Aydin;
-    const baseRender = configureRenderer();
 
     cover("AydinDom", AydinDom, () => (it) => {
         const root = makeRoot();
-        baseRender(AydinDom, it, root);
+        Aydin.render(AydinDom(root), it);
         return serialize(root);
     });
 
     cover("AydinDomServer", AydinDomServer, () => (it) => {
-        return baseRender(AydinDomServer, it);
+        return Aydin.render(AydinDomServer(), it);
     });
 
     function cover(prefix, driver, makeRender) {

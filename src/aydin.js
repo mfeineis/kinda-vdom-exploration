@@ -15,7 +15,6 @@ const slice = [].slice;
 const FIRST = 0;
 const SECOND = 1;
 const THIRD = 2;
-const TWO = 2;
 
 /**
  * @example
@@ -167,10 +166,13 @@ function configureRenderer() {
         return finalize;
     }
 
-    function render(drive, expr, root) {
+    function render(driver, expr) {
 
         invariant(
-            typeof drive === "function" && drive.length <= TWO,
+            typeof driver === "object" &&
+                driver.isSpecialTag &&
+                driver.reduce &&
+                driver.visit,
             "Please provide a valid 'driver' into 'render'"
         );
         invariant(
@@ -178,7 +180,7 @@ function configureRenderer() {
             "Please provide a valid expression"
         );
 
-        return traverse(drive(root), expr, [FIRST]);
+        return traverse(driver, expr, [FIRST]);
     }
 
     return render;

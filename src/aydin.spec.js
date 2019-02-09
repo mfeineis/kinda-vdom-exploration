@@ -23,9 +23,9 @@ describe("Aydin", () => {
 
     describe("the main exported 'render' function", () => {
 
-        it("should actually be a function with an arity of 3", () => {
+        it("should actually be a function with an arity of 2", () => {
             expect(typeof Aydin.render).toBe("function");
-            expect(Aydin.render).toHaveLength(3);
+            expect(Aydin.render).toHaveLength(2);
         });
 
     });
@@ -42,34 +42,26 @@ describe("Aydin", () => {
         });
 
         it("should return a 'render' function", () => {
-            const render = configureRenderer();
-
-            expect(render).toBeInstanceOf(Function);
-            expect(render.name).toBe("render");
+            expect(Aydin.render).toBeInstanceOf(Function);
+            expect(Aydin.render.name).toBe("render");
         });
 
         describe("a configured 'render' function", () => {
 
             it("should check the given 'driver' and 'expr'" ,() => {
-                const render = configureRenderer();
-
-                expect(() => render()).toThrow();
-                expect(() => render(identityDriver)).toThrow();
+                expect(() => Aydin.render()).toThrow();
+                expect(() => Aydin.render(identityDriver)).toThrow();
             });
 
             it("should use the given 'driver' to transform the input", () => {
-
-                const render = configureRenderer();
-
-                const result = render(identityDriver, ["div", "Hello, World!"]);
+                const result = Aydin.render(identityDriver, ["div", "Hello, World!"]);
                 expect(result).toEqual(["div", "Hello, World!"]);
             });
 
         });
 
         describe("handling simple edge cases", () => {
-            const baseRender = configureRenderer();
-            const render = (expr) => baseRender(identityDriver, expr);
+            const render = (expr) => Aydin.render(identityDriver, expr);
 
             it("should not be fine with trying to render nothing", () => {
                 expect(() => render([])).toThrow();
@@ -84,27 +76,31 @@ describe("Aydin", () => {
         });
 
         describe("debugability", () => {
-            const base = configureRenderer();
-            const render = (expr, log) => base(tracable(identityDriver, log), expr);
+            const render = (expr, log) => Aydin.render(tracable(identityDriver, log), expr);
 
             it("should be easy debug how the expression is traversed", () => {
                 const log = [];
                 render(
-                    ["div",
-                        "One",
-                        "Two",
-                        ["span", "Three", "Four"]
+                    [
+                        ["div",
+                            "One",
+                            "Two",
+                            ["span", "Three", "Four"]
+                        ],
+                        ["span", "Five"],
                     ],
                     log
                 );
 
                 expect(log).toEqual([
-                    "0000: [0] ELEMENT_NODE(1) <div>",
-                    "0001: [0,0] TEXT_NODE(3) 'One'",
-                    "0002: [0,1] TEXT_NODE(3) 'Two'",
-                    "0003: [0,2] ELEMENT_NODE(1) <span>",
-                    "0004: [0,2,0] TEXT_NODE(3) 'Three'",
-                    "0005: [0,2,1] TEXT_NODE(3) 'Four'",
+                    "0000: [0,0] ELEMENT_NODE(1) <div>",
+                    "0001: [0,0,0] TEXT_NODE(3) 'One'",
+                    "0002: [0,0,1] TEXT_NODE(3) 'Two'",
+                    "0003: [0,0,2] ELEMENT_NODE(1) <span>",
+                    "0004: [0,0,2,0] TEXT_NODE(3) 'Three'",
+                    "0005: [0,0,2,1] TEXT_NODE(3) 'Four'",
+                    "0006: [0,1] ELEMENT_NODE(1) <span>",
+                    "0007: [0,1,0] TEXT_NODE(3) 'Five'",
                 ]);
 
             });
