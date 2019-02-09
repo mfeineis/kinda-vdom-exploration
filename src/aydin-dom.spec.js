@@ -157,15 +157,45 @@ describe("aydin-dom", () => {
 
         describe("user interactions with the DOM", () => {
 
-            it("should attach simple event handlers for 'on*' props", () => {
-                const root = makeRoot();
-                const handler = jest.fn();
+            describe("simple event handler functions", () => {
 
-                render(root, ["button", { onClick: handler }]);
+                it("should attach simple handlers for 'on*' props", () => {
+                    const root = makeRoot();
+                    const onClick = jest.fn();
+                    const onMouseDown = jest.fn();
+                    const onMouseUp = jest.fn();
 
-                simulate("click", root.childNodes[FIRST]);
+                    render(root, ["button", { onClick, onMouseDown, onMouseUp }]);
+                    simulate("click", root.childNodes[FIRST]);
+                    simulate("mouseup", root.childNodes[FIRST]);
 
-                expect(handler).toHaveBeenCalled();
+                    expect(onClick).toHaveBeenCalled();
+                    expect(onMouseDown).not.toHaveBeenCalled();
+                });
+
+                it("should hand props into the event handler", () => {
+                    const root = makeRoot();
+                    const onClick = jest.fn();
+                    const props = { onClick };
+
+                    render(root, ["button", props]);
+                    simulate("click", root.childNodes[FIRST]);
+
+                    expect(onClick.mock.calls[0][0]).toBe(props);
+                });
+
+                it("should hand the native event args as the second argument", () => {
+                    const root = makeRoot();
+                    const onClick = jest.fn();
+                    const props = { onClick };
+
+                    render(root, ["button", props]);
+                    const button = root.childNodes[FIRST];
+                    const [ev] = simulate("click", button);
+
+                    expect(onClick.mock.calls[0][1]).toBe(ev);
+                });
+
             });
 
         });

@@ -104,8 +104,16 @@
                 "Hello, real DOM!",
                 ["div", { "class": "text-color-red", data: { id: "ID" } },
                     ["ol", ["li", "1st"], ["li", "2nd"]],
-                    ["p", { "class": { "font-weight-bold": 1 } },  "With some bold text"]
-                ]
+                    ["p", { "class": { "font-weight-bold": 1 } },  "With some bold text"],
+                    ["p",
+                        ["button", {
+                             onClick: function (props, ev) {
+                                console.log(props, ev);
+                             },
+                        }, "Click Me!",
+                        ],
+                    ],
+                ],
             ];
         Aydin.render(AydinDom, expr, node);
 

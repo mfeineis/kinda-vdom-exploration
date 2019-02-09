@@ -40,8 +40,8 @@ function driver(root) {
 
                 if (/^on/.test(key)) {
                     const event = key.toLocaleLowerCase().replace(/^on/, "");
-                    node.addEventListener(event, function () {
-                        value();
+                    node.addEventListener(event, function (ev) {
+                        value(props, ev);
                     });
                     return;
                 }

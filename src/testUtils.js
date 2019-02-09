@@ -197,11 +197,17 @@ function serialize(root) {
 }
 
 function simulate(event, node) {
+    const result = [];
     for (const [eventName, handler] of node._listeners) {
         if (event === eventName) {
-            handler();
+            const args = {
+                target: node,
+            };
+            result.push(args);
+            handler(args);
         }
     }
+    return result;
 }
 
 /* eslint-disable immutable/no-mutation */
