@@ -168,11 +168,14 @@ function makeRoot() {
         childNodes: [],
     };
     return {
+        get _serializedHTML() {
+            return walk(null, rootState.childNodes);
+        },
         appendChild: (node) => {
             rootState.childNodes.push(node);
         },
-        get innerHTML() {
-            return walk(null, rootState.childNodes);
+        get childNodes() {
+            return rootState.childNodes;
         },
         ownerDocument,
     };
@@ -182,10 +185,14 @@ function html(items) {
     return items.map((it) => it.trim()).join("");
 }
 
+function serialize(root) {
+    return root._serializedHTML;
+}
 /* eslint-disable immutable/no-mutation */
 exports.html = html;
 exports.identityDriver = identityDriver;
 exports.makeRoot = makeRoot;
 exports.range = range;
+exports.serialize = serialize;
 exports.tracable = tracable;
 /* eslint-enable immutable/no-mutation */

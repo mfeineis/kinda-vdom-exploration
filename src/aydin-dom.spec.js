@@ -1,7 +1,12 @@
 const Aydin = require("./aydin");
 const AydinDom = require("./aydin-dom");
 
-const { html, makeRoot, tracable } = require("./testUtils");
+const {
+    html,
+    makeRoot,
+    serialize,
+    tracable,
+} = require("./testUtils");
 
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
@@ -77,7 +82,7 @@ describe("aydin-dom", () => {
 
                 render(root, "Simple String");
 
-                expect(root.innerHTML).toBe(html([
+                expect(serialize(root)).toBe(html([
                     "Simple String",
                 ]));
             });
@@ -85,7 +90,7 @@ describe("aydin-dom", () => {
             it("should append a simple <div> into the given 'root'", () => {
                 const root = makeRoot();
                 render(root, ["div", "Hello, World!"]);
-                expect(root.innerHTML).toBe(html([
+                expect(serialize(root)).toBe(html([
                     "<div>",
                     "  Hello, World!",
                     "</div>",
@@ -95,7 +100,7 @@ describe("aydin-dom", () => {
             it("should append a simple <span> into the given 'root'", () => {
                 const root = makeRoot();
                 render(root, ["span", "Simple"]);
-                expect(root.innerHTML).toBe(html([
+                expect(serialize(root)).toBe(html([
                     "<span>",
                     "  Simple",
                     "</span>",
@@ -105,7 +110,7 @@ describe("aydin-dom", () => {
             it("should append a another <b> into the given 'root'", () => {
                 const root = makeRoot();
                 render(root, ["b", "Bold"]);
-                expect(root.innerHTML).toBe(html([
+                expect(serialize(root)).toBe(html([
                     "<b>",
                     "  Bold",
                     "</b>",
@@ -134,7 +139,7 @@ describe("aydin-dom", () => {
                     "0006: [0,4] TEXT_NODE(3) 'Five'",
                 ]);
 
-                expect(root.innerHTML).toBe(html([
+                expect(serialize(root)).toBe(html([
                     "<div>",
                     "  One",
                     "  Two",

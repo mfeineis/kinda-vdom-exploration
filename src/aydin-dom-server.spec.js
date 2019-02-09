@@ -6,7 +6,12 @@ const Aydin = require("./aydin");
 const AydinDom = require("./aydin-dom");
 const AydinDomServer = require("./aydin-dom-server");
 
-const { html, makeRoot, range } = require("./testUtils");
+const {
+    html,
+    makeRoot,
+    range,
+    serialize,
+} = require("./testUtils");
 
 describe("aydin-dom-server", () => {
     const { configureRenderer } = Aydin;
@@ -48,7 +53,7 @@ describe("The traits that both the DOM and DOMServer driver share", () => {
     cover("AydinDom", AydinDom, () => (it) => {
         const root = makeRoot();
         baseRender(AydinDom, it, root);
-        return root.innerHTML;
+        return serialize(root);
     });
 
     cover("AydinDomServer", AydinDomServer, () => (it) => {
