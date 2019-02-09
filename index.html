@@ -108,7 +108,9 @@
                     ["p",
                         ["button", {
                              onClick: function (props, ev) {
-                                console.log(props, ev);
+                                 const args = { props: props, ev: ev };
+                                 console.log(args);
+                                 alert(JSON.stringify(args, null, "  "));
                              },
                         }, "Click Me!",
                         ],

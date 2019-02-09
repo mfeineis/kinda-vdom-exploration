@@ -36,6 +36,12 @@ const tracable = (drive, trace) => (...args) => {
     };
 };
 
+/**
+ * @example
+ *     range(5) // => [0, 1, 2, 3, 4]
+ *     range(5, 2) // => [0, 2, 4, 6, 8]
+ *     range(0) // => []
+ */
 function range(count, step = 1) {
     const result = [];
     // eslint-disable-next-line immutable/no-let
@@ -188,6 +194,11 @@ function makeRoot() {
     };
 }
 
+/**
+ * @example
+ *     html(["<i>", "  text", "<b>bold</b> .  ", "</i>"])
+ *     // => "<i>text<b>bold</b> .</i>"
+ */
 function html(items) {
     return items.map((it) => it.trim()).join("");
 }
