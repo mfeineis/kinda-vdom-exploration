@@ -1,3 +1,6 @@
+const constants = require("./constants");
+const ELEMENT_NODE = constants.ELEMENT_NODE;
+const TEXT_NODE = constants.TEXT_NODE;
 
 const identityDriver = () => ({
     isSpecialTag: () => [false],
@@ -142,6 +145,7 @@ function makeRoot() {
                     return nodeState.dataset;
                 },
                 nodeName,
+                nodeType: ELEMENT_NODE,
                 ownerDocument,
             });
             return new Proxy(node, {
@@ -153,6 +157,7 @@ function makeRoot() {
         },
         createTextNode: (textContent) => {
             const node = Object.freeze({
+                nodeType: TEXT_NODE,
                 ownerDocument,
                 textContent,
             });

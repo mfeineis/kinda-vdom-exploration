@@ -39,115 +39,6 @@ describe("aydin-dom-server", () => {
 
     });
 
-    describe("rendering complex structures", () => {
-
-        it("should support rendering flat collections of nodes", () => {
-            const generated = render([
-                ["b#important"],
-                ["h1.highlighted", "Heading"],
-                ["p.y.x", "Some Content"],
-            ]);
-
-            expect(generated).toBe(html([
-                "<b id=\"important\"></b>",
-                "<h1 class=\"highlighted\">Heading</h1>",
-                "<p class=\"x y\">Some Content</p>",
-            ]));
-        });
-
-        it("should support rendering trees of nodes", async () => {
-            const generated = render([
-                ["!DOCTYPE html"],
-                ["html", { lang: "en" },
-                    ["head", ["title", "Testtitle"]],
-                    ["body",
-                        ["div#main.section.padding-top-5",
-                            ["h1", "A Heading"],
-                            ["div",
-                                "Some inline text",
-                                ["b", "with bold text"],
-                                "and",
-                                ["i", "also italic stuff"],
-                                ["ol",
-                                    ["li.--active", "Point 1"],
-                                    ["li", "Point 2"],
-                                    ["li", "Point 3"],
-                                ],
-                            ],
-                            ["p", "Second paragraph"],
-                        ],
-                    ],
-                ],
-            ]);
-
-            const expected = html([
-                "<!DOCTYPE html>",
-                "<html lang=\"en\">",
-                "<head><title>Testtitle</title></head>",
-                "<body>",
-                "  <div class=\"padding-top-5 section\" id=\"main\">",
-                "    <h1>A Heading</h1>",
-                "    <div>",
-                "      Some inline text",
-                "      <b>with bold text</b>",
-                "      and",
-                "      <i>also italic stuff</i>",
-                "      <ol>",
-                "        <li class=\"--active\">Point 1</li>",
-                "        <li>Point 2</li>",
-                "        <li>Point 3</li>",
-                "      </ol>",
-                "    </div>",
-                "    <p>Second paragraph</p>",
-                "  </div>",
-                "</body>",
-                "</html>",
-            ]);
-
-            expect(generated).toBe(expected);
-
-            await Promise.all([
-                validateHtml(generated),
-                validateHtml(expected),
-            ]).then(([inResults, outResults]) => {
-                const inOk = inResults.messages.length === 0;
-                const outOk = outResults.messages.length === 0;
-
-                expect(inOk && outOk).toBe(true);
-            }).catch((error) => {
-                expect("Markup to be valid").toBe(error);
-            });
-        });
-
-    });
-
-    describe("using code templates", () => {
-
-        it("should support functions acting as simple templates", () => {
-
-            function tmpl(props, children) {
-                expect(typeof props).toBe("object");
-                expect(children).toEqual(["Text1", "Text2"]);
-
-                const { items } = props;
-                expect(items).toEqual(["a", "b"]);
-
-                return [
-                    ["ul",
-                        ...items.map((id) => ["li", {
-                            data: { id },
-                        }, id]),
-                    ],
-                    ...children,
-                ];
-            }
-
-            expect(render([tmpl, { items: ["a", "b"] }, "Text1", "Text2"]))
-                .toBe("<ul><li data-id=\"a\">a</li><li data-id=\"b\">b</li></ul>Text1Text2");
-        });
-
-    });
-
 });
 
 describe("The traits that both the DOM and DOMServer driver share", () => {
@@ -531,34 +422,178 @@ describe("The traits that both the DOM and DOMServer driver share", () => {
 
             });
 
-        });
 
-        describe("rendering flat expressions", () => {
+            describe("rendering flat expressions", () => {
 
-            it("should be able to render expressions with all kinds of children", () => {
-                const render = makeRender();
-                expect(render(["div", ["b", "Bold!"], "Normal", ["i", "Italics!"]])).toBe(html([
-                    "<div>",
-                    "  <b>Bold!</b>",
-                    "  Normal",
-                    "  <i>Italics!</i>",
-                    "</div>",
-                ]));
+                it("should be able to render expressions with all kinds of children", () => {
+                    const render = makeRender();
+                    expect(render(["div", ["b", "Bold!"], "Normal", ["i", "Italics!"]])).toBe(html([
+                        "<div>",
+                        "  <b>Bold!</b>",
+                        "  Normal",
+                        "  <i>Italics!</i>",
+                        "</div>",
+                    ]));
+
+                });
+
+                it("should be able to render expressions with many text children", () => {
+                    const render = makeRender();
+                    const labels = range(42).map((n) => `x${n}`);
+                    expect(render(["div", ...labels])).toBe(html([
+                        "<div>",
+                        ...labels,
+                        "</div>",
+                    ]));
+                });
 
             });
 
-            it("should be able to render expressions with many text children", () => {
-                const render = makeRender();
-                const labels = range(42).map((n) => `x${n}`);
-                expect(render(["div", ...labels])).toBe(html([
-                    "<div>",
-                    ...labels,
-                    "</div>",
-                ]));
+            describe("using code templates", () => {
+
+                it("should support functions acting as simple templates", () => {
+                    const render = makeRender();
+
+                    function tmpl(props, children) {
+                        expect(typeof props).toBe("object");
+                        expect(children).toEqual([]);
+
+                        const { items } = props;
+                        expect(items).toEqual(["a", "b"]);
+
+                        return ["ul",
+                            ...items.map((id) => ["li", {
+                                data: { id },
+                            }, id]),
+                        ];
+                    }
+
+                    expect(render([tmpl, { items: ["a", "b"] }]))
+                        .toBe(html([
+                            "<ul>",
+                            "  <li data-id=\"a\">a</li>",
+                            "  <li data-id=\"b\">b</li>",
+                            "</ul>",
+                        ]));
+                });
+
+                it("should support that simple templates return flat collections", () => {
+                    const render = makeRender();
+
+                    function tmpl(props, children) {
+                        expect(typeof props).toBe("object");
+                        expect(children).toEqual(["Text1", "Text2"]);
+
+                        const { items } = props;
+                        expect(items).toEqual(["a", "b"]);
+
+                        return [
+                            ["ul",
+                                ...items.map((id) => ["li", {
+                                    data: { id },
+                                }, id]),
+                            ],
+                            ...children,
+                        ];
+                    }
+
+                    expect(render([tmpl, { items: ["a", "b"] }, "Text1", "Text2"]))
+                        .toBe(html([
+                            "<ul>",
+                            "  <li data-id=\"a\">a</li>",
+                            "  <li data-id=\"b\">b</li>",
+                            "</ul>",
+                            "Text1",
+                            "Text2",
+                        ]));
+                });
+
+            });
+
+            describe("rendering complex structures", () => {
+
+                it("should support rendering flat collections of nodes", () => {
+                    const render = makeRender();
+                    const generated = render([
+                        ["b#important"],
+                        ["h1.highlighted", "Heading"],
+                        ["p.y.x", "Some Content"],
+                    ]);
+
+                    expect(generated).toBe(html([
+                        "<b id=\"important\"></b>",
+                        "<h1 class=\"highlighted\">Heading</h1>",
+                        "<p class=\"x y\">Some Content</p>",
+                    ]));
+                });
+
+
+                it("should support rendering trees of nodes", async () => {
+                    const render = makeRender();
+                    const generated = render(
+                        ["html", { lang: "en" },
+                            ["head", ["title", "Testtitle"]],
+                            ["body",
+                                ["div#main.section.padding-top-5",
+                                    ["h1", "A Heading"],
+                                    ["div",
+                                        "Some inline text",
+                                        ["b", "with bold text"],
+                                        "and",
+                                        ["i", "also italic stuff"],
+                                        ["ol",
+                                            ["li.--active", "Point 1"],
+                                            ["li", "Point 2"],
+                                            ["li", "Point 3"],
+                                        ],
+                                    ],
+                                    ["p", "Second paragraph"],
+                                ],
+                            ],
+                        ]
+                    );
+
+                    const expected = html([
+                        "<html lang=\"en\">",
+                        "<head><title>Testtitle</title></head>",
+                        "<body>",
+                        "  <div class=\"padding-top-5 section\" id=\"main\">",
+                        "    <h1>A Heading</h1>",
+                        "    <div>",
+                        "      Some inline text",
+                        "      <b>with bold text</b>",
+                        "      and",
+                        "      <i>also italic stuff</i>",
+                        "      <ol>",
+                        "        <li class=\"--active\">Point 1</li>",
+                        "        <li>Point 2</li>",
+                        "        <li>Point 3</li>",
+                        "      </ol>",
+                        "    </div>",
+                        "    <p>Second paragraph</p>",
+                        "  </div>",
+                        "</body>",
+                        "</html>",
+                    ]);
+
+                    expect(generated).toBe(expected);
+
+                    await Promise.all([
+                        validateHtml("<!DOCTYPE html>" + generated),
+                        validateHtml("<!DOCTYPE html>" + expected),
+                    ]).then(([inResults, outResults]) => {
+                        const inOk = inResults.messages.length === 0;
+                        const outOk = outResults.messages.length === 0;
+
+                        expect(inOk && outOk).toBe(true);
+                    }).catch((error) => {
+                        expect("Markup to be valid").toBe(error);
+                    });
+                });
+
             });
 
         });
-
     }
 
 });

@@ -19,6 +19,12 @@ function driver(root) {
 
     const document = root.ownerDocument;
 
+    function reduce(children) {
+        children.forEach(function (child) {
+            root.appendChild(child);
+        });
+    }
+
     function visit(tag, props, nodeType, path) {
         if (nodeType === INVALID_NODE) {
             // TODO: Should we really panic on invalid tag names?
@@ -82,6 +88,7 @@ function driver(root) {
 
     return {
         isSpecialTag,
+        reduce,
         visit,
     };
 }
