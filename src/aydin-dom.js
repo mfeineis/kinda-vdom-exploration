@@ -39,7 +39,10 @@ function driver(root) {
                 const value = props[key];
 
                 if (/^on/.test(key)) {
-                    // FIXME: Attach event handlers!
+                    const event = key.toLocaleLowerCase().replace(/^on/, "");
+                    node.addEventListener(event, function () {
+                        value();
+                    });
                     return;
                 }
 

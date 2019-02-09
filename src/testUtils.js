@@ -116,10 +116,14 @@ function makeRoot() {
             const nodeState = {
                 childNodes: [],
                 dataset: Object.create(null),
+                listeners: [],
                 propertyNameLookup: new Set(),
                 propertyValues: new Map(),
             };
             const node = Object.freeze({
+                get _listeners() {
+                    return nodeState.listeners;
+                },
                 get _properties() {
                     const dataProps = [];
                     Object.keys(nodeState.dataset).forEach((key) => {
@@ -134,6 +138,9 @@ function makeRoot() {
                     return dataProps.concat(props).sort(([a], [b]) => {
                         return a <= b ? -1 : 1;
                     });
+                },
+                addEventListener(name, fn) {
+                    nodeState.listeners.push([name, fn]);
                 },
                 appendChild(child) {
                     nodeState.childNodes.push(child);
@@ -188,11 +195,21 @@ function html(items) {
 function serialize(root) {
     return root._serializedHTML;
 }
+
+function simulate(event, node) {
+    for (const [eventName, handler] of node._listeners) {
+        if (event === eventName) {
+            handler();
+        }
+    }
+}
+
 /* eslint-disable immutable/no-mutation */
 exports.html = html;
 exports.identityDriver = identityDriver;
 exports.makeRoot = makeRoot;
 exports.range = range;
 exports.serialize = serialize;
+exports.simulate = simulate;
 exports.tracable = tracable;
 /* eslint-enable immutable/no-mutation */

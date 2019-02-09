@@ -5,11 +5,14 @@ const {
     html,
     makeRoot,
     serialize,
+    simulate,
     tracable,
 } = require("./testUtils");
 
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
+
+const FIRST = 0;
 
 describe("aydin-dom", () => {
     const { configureRenderer } = Aydin;
@@ -148,6 +151,21 @@ describe("aydin-dom", () => {
                     "  Five",
                     "</div>",
                 ]));
+            });
+
+        });
+
+        describe("user interactions with the DOM", () => {
+
+            it("should attach simple event handlers for 'on*' props", () => {
+                const root = makeRoot();
+                const handler = jest.fn();
+
+                render(root, ["button", { onClick: handler }]);
+
+                simulate("click", root.childNodes[FIRST]);
+
+                expect(handler).toHaveBeenCalled();
             });
 
         });
