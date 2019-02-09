@@ -127,11 +127,11 @@ function driver() {
     }
 
     return {
-        isSpecialTag,
-        reduce(nodes) {
+        isSpecialTag: isSpecialTag,
+        reduce: function (nodes) {
             return nodes.join("");
         },
-        visit,
+        visit: visit,
     };
 }
 

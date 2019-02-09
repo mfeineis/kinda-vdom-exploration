@@ -87,9 +87,9 @@ function driver(root) {
     }
 
     return {
-        isSpecialTag,
-        reduce,
-        visit,
+        isSpecialTag: isSpecialTag,
+        reduce: reduce,
+        visit: visit,
     };
 }
 
