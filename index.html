@@ -40,10 +40,14 @@
 
     <div id="root"></div>
 
-    <script src="dist/aydin.js"></script>
-    <script src="dist/aydin-dom.js"></script>
-    <script src="dist/aydin-dom-server.js"></script>
+    <script src="assets/require.js"></script>
     <script>
+
+     require.config({
+         baseUrl: "./dist",
+     });
+
+     require(["aydin", "aydin-dom", "aydin-dom-server"], function (Aydin, AydinDom, AydinDomServer) {
 
      const makeSample = function (title, data) {
          console.log("makeSample", title, data);
@@ -111,6 +115,8 @@
 
         document.body.appendChild(node);
      }
+
+     });
 
     </script>
 </body>

@@ -4,6 +4,7 @@ module.exports = {
         "eslint:recommended",
         "plugin:jest/recommended",
     ],
+    "root": true,
     "env": {
         "commonjs": true
     },
@@ -15,7 +16,6 @@ module.exports = {
         "compat",
         "immutable"
     ],
-    "root": true,
     "rules": {
         "compat/compat": "error",
         "immutable/no-let": 2,
