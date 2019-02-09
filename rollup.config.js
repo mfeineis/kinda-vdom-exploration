@@ -52,4 +52,18 @@ export default [
             production && terser(terserOptions),
         ],
     },
+    {
+        input: "src/aydin-transform-markdown.js",
+        output: {
+            file: "dist/aydin-transform-markdown.js",
+            format: "umd",
+            name: "AydinTransformMarkdown",
+            sourcemap: true,
+        },
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            production && terser(terserOptions),
+        ],
+    },
 ];

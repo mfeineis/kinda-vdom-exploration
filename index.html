@@ -47,7 +47,7 @@
          baseUrl: "./dist",
      });
 
-     require(["aydin", "aydin-dom", "aydin-dom-server"], function (Aydin, AydinDom, AydinDomServer) {
+     require(["aydin", "aydin-dom", "aydin-dom-server", "aydin-transform-markdown"], function (Aydin, AydinDom, AydinDomServer, markdown) {
 
      const makeSample = function (title, data) {
          console.log("makeSample", title, data);
@@ -125,6 +125,17 @@
 
         document.body.appendChild(node);
      }
+
+     makeSample("Using markdown",
+         [markdown, [
+             "## Some markdown",
+             "With a paragraph with a list",
+             "* Item one",
+             "* Item two",
+             "* Item three",
+             "[A link to example.org](http://example.org)",
+         ].join("\n")]
+     );
 
      });
 
