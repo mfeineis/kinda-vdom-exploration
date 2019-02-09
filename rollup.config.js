@@ -5,7 +5,7 @@ import { terser } from "rollup-plugin-terser";
 const production = !process.env.ROLLUP_WATCH;
 const terserOptions = {
     ecma: 5,
-    toplevel: true,
+    // toplevel: true,
     warnings: true,
 };
 
