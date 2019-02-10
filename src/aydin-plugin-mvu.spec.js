@@ -2,9 +2,10 @@ const pkg = require("../package.json");
 
 const Aydin = require("./aydin");
 const plugin = require("./aydin-plugin-mvu");
-const { identityDriver } = require("./testUtils.js");
+const { identityDriver, simulate } = require("./testUtils.js");
 
 describe("the Aydin Model View Update plugin for state management", () => {
+    const { render } = Aydin;
 
     it("should export something", () => {
         expect(plugin).toBeDefined();
@@ -34,9 +35,8 @@ describe("the Aydin Model View Update plugin for state management", () => {
         });
 
         it("should take over state management for enhanced templates when the render is driven by the MVU plugin", () => {
-            const { render } = Aydin;
-            const mvu = plugin((msg, model) => {
-                if (!msg) {
+            const mvu = plugin((model, msg) => {
+                if (!model) {
                     return [{ count1: 0 }];
                 }
 
@@ -54,7 +54,6 @@ describe("the Aydin Model View Update plugin for state management", () => {
         });
 
         it("should leave the behavior of the base templates intact if used without the plugin being present when rendering", () => {
-            const { render } = Aydin;
             const input = { a: "a", b: "b" };
             const mvu = plugin(() => [input]);
 
@@ -73,6 +72,84 @@ describe("the Aydin Model View Update plugin for state management", () => {
             expect(render(mvu(identityDriver), [fn, input])).toEqual(["", "a", "b"]);
             expect(render(mvu(identityDriver), connected)).toEqual(["", "b", "a"]);
             expect(render(mvu(identityDriver), [connected, {}])).toEqual(["", "b", "a"]);
+        });
+
+        it("should hand in the whole state if no lens is given", () => {
+            const mvu = plugin(() => [{ count: 0 }]);
+            const connected = plugin.lens()(counter);
+
+            const expr = render(mvu(identityDriver), connected);
+            expect(expr).toEqual([
+                ["button", { onClick: ["INC", 1] }, "+"], "0",
+            ]);
+            const [msg] = simulate("click", expr[0]);
+            expect(msg).toEqual(["INC", 1]);
+        });
+
+        it("should map messages to the update function", () => {
+            const mvu = plugin((model, msg) => {
+                if (!model) {
+                    return [{ count: 0 }];
+                }
+                switch (msg[0]) {
+                case "INC":
+                    return [{ count: model.count + msg[1] }];
+                default:
+                    return [model];
+                }
+            });
+
+            const connected = plugin.lens()(counter);
+            const driver = mvu(identityDriver);
+            const expr = render(driver, connected);
+            expect(expr).toEqual([
+                ["button", { onClick: ["INC", 1] }, "+"], "0",
+            ]);
+
+            simulate("click", expr[0], driver);
+            simulate("mouseup", expr[0], driver);
+            simulate("mousedown", expr, driver);
+
+            expect(render(driver, connected)).toEqual([
+                ["button", { onClick: ["INC", 2] }, "+"], "1",
+            ]);
+        });
+
+    });
+
+    describe("simulating interactions", () => {
+
+        it("should update only on suitable interactions", () => {
+            const mvu = plugin((model) => {
+                if (!model) {
+                    return [{ what: "Bold" }];
+                }
+                return [{ what: "Flawed" }];
+            });
+
+            const connected = plugin.lens()(({ what }) => [
+                ["i", "Nothing"],
+                ["b", { onClick: ["anything"] }, what],
+            ]);
+            const driver = mvu(identityDriver);
+            const expr = render(driver, connected);
+            expect(expr).toEqual([
+                ["i", "Nothing"],
+                ["b", { onClick: ["anything"] }, "Bold"],
+            ]);
+
+            simulate("mouseup", expr[0], driver);
+            simulate("mousedown", expr[1], driver);
+            expect(render(driver, connected)).toEqual([
+                ["i", "Nothing"],
+                ["b", { onClick: ["anything"] }, "Bold"],
+            ]);
+
+            simulate("click", expr[1], driver);
+            expect(render(driver, connected)).toEqual([
+                ["i", "Nothing"],
+                ["b", { onClick: ["anything"] }, "Flawed"],
+            ]);
         });
 
     });

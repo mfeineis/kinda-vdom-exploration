@@ -3,13 +3,18 @@ const LENS_EXPANDO = "__aydin_plugin_mvu_lens";
 
 const FIRST = 0;
 
+function identity(it) {
+    return it;
+}
+
 function baseExpand(tmpl, props, children) {
     return tmpl.call(null, props, children);
 }
 
 function plugin(update) {
-    const init = update(null);
-    const model = init[FIRST];
+    const init = update();
+    // eslint-disable-next-line immutable/no-let
+    let model = init[FIRST];
 
     function driver(decoratee) {
 
@@ -20,6 +25,13 @@ function plugin(update) {
             return (decoratee.expand || baseExpand)(tmpl, props, children);
         }
 
+        function signal(msgs) {
+            msgs.forEach(function (msg) {
+                const result = update(model, msg);
+                model = result[FIRST];
+            });
+        }
+
         function visit(tag, props, nodeType, path) {
             return decoratee.visit(tag, props, nodeType, path);
         }
@@ -28,6 +40,7 @@ function plugin(update) {
             expand: expand,
             isSpecialTag: decoratee.isSpecialTag,
             reduce: decoratee.reduce,
+            signal: signal,
             visit: visit,
         };
     }
@@ -43,7 +56,7 @@ function lens(get) {
         }
 
         /* eslint-disable immutable/no-mutation */
-        connected[LENS_EXPANDO] = get;
+        connected[LENS_EXPANDO] = get || identity;
         /* eslint-enable immutable/no-mutation */
 
         return connected;

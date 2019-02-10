@@ -1,6 +1,11 @@
 const utils = require("./utils");
+
 const ELEMENT_NODE = utils.ELEMENT_NODE;
 const TEXT_NODE = utils.TEXT_NODE;
+
+const isArray = utils.isArray;
+const isFunction = utils.isFunction;
+const isObject = utils.isObject;
 
 const identityDriver = Object.freeze({
     visit: (expr, props, nodeType) => {
@@ -208,17 +213,32 @@ function serialize(root) {
     return root._serializedHTML;
 }
 
-function simulate(event, node) {
+function simulate(event, node, driver = identityDriver) {
     const result = [];
-    for (const [eventName, handler] of node._listeners) {
-        if (event === eventName) {
-            const args = {
-                target: node,
-            };
-            result.push(args);
-            handler(args);
+
+    if (node.ownerDocument) {
+        for (const [eventName, handler] of node._listeners) {
+            if (event === eventName) {
+                const args = {
+                    target: node,
+                };
+                result.push(args);
+                handler(args);
+            }
+        }
+    } else if (isArray(node) && isObject(node[1])) {
+        for (const [eventName, handler] of Object.entries(node[1])) {
+            const normalized = eventName.toLowerCase().replace(/^on/, "");
+            if (event === normalized) {
+                result.push(handler);
+            }
         }
     }
+
+    if (isFunction(driver.signal)) {
+        driver.signal(result);
+    }
+
     return result;
 }
 
