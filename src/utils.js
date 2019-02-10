@@ -14,6 +14,10 @@ function invariant(condition, message) {
 const isArray = Array.isArray;
 
 /**
+ * @remarks
+ *     In some old Safari versions you could use RegExps like functions
+ *     and the `typeof` operator would give back "function" for them
+ *     for... reasons
  * @example
  *     isFunction(() => {}) // => true
  *     isFunction(function () {}) // => true
@@ -25,7 +29,7 @@ const isArray = Array.isArray;
  *     isFunction(42) // => false
  */
 function isFunction(it) {
-    return typeof it === "function";
+    return typeof it === "function" && !(it instanceof RegExp);
 }
 
 /**
