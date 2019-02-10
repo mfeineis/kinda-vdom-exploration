@@ -2,7 +2,7 @@ const pkg = require("../package.json");
 
 const Aydin = require("./aydin");
 const plugin = require("./aydin-plugin-mvu");
-const { identityDriver, simulate } = require("./testUtils.js");
+const { identityDriver, nonReactive, simulate } = require("./testUtils.js");
 
 describe("the Aydin Model View Update plugin for state management", () => {
     const { render } = Aydin;
@@ -147,6 +147,54 @@ describe("the Aydin Model View Update plugin for state management", () => {
 
             simulate("click", expr[1], driver);
             expect(render(driver, connected)).toEqual([
+                ["i", "Nothing"],
+                ["b", { onClick: ["anything"] }, "Flawed"],
+            ]);
+        });
+
+        it("should support bubbling signals upstream when visiting nodes", () => {
+            // eslint-disable-next-line immutable/no-let
+            let bubbleCount = 0;
+            const bubbling = (next) => (signal) => {
+                const decoratee = next(signal);
+                return Object.freeze({
+                    expand: decoratee.expand,
+                    isSpecialTag: decoratee.isSpecialTag,
+                    reduce: decoratee.reduce,
+                    visit: (expr, props, nodeType, path, bubble) => {
+                        if (bubbleCount === 0) {
+                            bubble(["GLIDE!"]);
+                        } else {
+                            bubble([]);
+                        }
+
+                        bubbleCount += 1;
+                        return decoratee.visit(expr, props, nodeType, path);
+                    },
+                });
+            };
+
+            const mvu = plugin((model) => {
+                if (!model) {
+                    return [{ what: "Bold!" }];
+                }
+
+                return [{ what: "Flawed" }];
+            });
+
+            const fn = plugin.lens()(({ what }) => [
+                ["i", "Nothing"],
+                ["b", { onClick: ["anything"] }, what],
+            ]);
+            const driver = nonReactive(mvu(bubbling(identityDriver)));
+            const expr = render(driver, fn);
+            expect(expr).toEqual([
+                ["i", "Nothing"],
+                ["b", { onClick: ["anything"] }, "Bold!"],
+            ]);
+
+            simulate("click", expr[1], driver);
+            expect(render(driver, fn)).toEqual([
                 ["i", "Nothing"],
                 ["b", { onClick: ["anything"] }, "Flawed"],
             ]);

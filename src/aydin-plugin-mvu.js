@@ -2,6 +2,7 @@
 const LENS_EXPANDO = "__aydin_plugin_mvu_lens";
 
 const FIRST = 0;
+const NONE = 0;
 
 function identity(it) {
     return it;
@@ -17,10 +18,17 @@ function plugin(update) {
     let model = init[FIRST];
 
     function dispatch(msgs) {
+        // eslint-disable-next-line immutable/no-let
+        let newModel = model;
+
         msgs.forEach(function (msg) {
-            const result = update(model, msg);
-            model = result[FIRST];
+            const result = update(newModel, msg);
+            newModel = result[FIRST];
         });
+
+        const hasChanges = msgs.length > NONE && newModel !== model;
+        model = newModel;
+        return hasChanges;
     }
 
     function driver(next) {
@@ -36,8 +44,9 @@ function plugin(update) {
             }
 
             function handle(msgs) {
-                dispatch(msgs);
-                signal();
+                if (dispatch(msgs)) {
+                    signal();
+                }
             }
 
             function visit(tag, props, nodeType, path) {
