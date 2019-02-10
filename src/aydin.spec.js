@@ -82,6 +82,7 @@ describe("Aydin", () => {
                 const log = [];
                 render(
                     [
+                        "",
                         ["div",
                             "One",
                             "Two",
@@ -93,14 +94,15 @@ describe("Aydin", () => {
                 );
 
                 expect(log).toEqual([
-                    "0000: [0,0] ELEMENT_NODE(1) <div>",
-                    "0001: [0,0,0] TEXT_NODE(3) 'One'",
-                    "0002: [0,0,1] TEXT_NODE(3) 'Two'",
-                    "0003: [0,0,2] ELEMENT_NODE(1) <span>",
-                    "0004: [0,0,2,0] TEXT_NODE(3) 'Three'",
-                    "0005: [0,0,2,1] TEXT_NODE(3) 'Four'",
-                    "0006: [0,1] ELEMENT_NODE(1) <span>",
-                    "0007: [0,1,0] TEXT_NODE(3) 'Five'",
+                    "0000: [0,0] TEXT_NODE(3) ''",
+                    "0001: [0,1] ELEMENT_NODE(1) <div>",
+                    "0002: [0,1,0] TEXT_NODE(3) 'One'",
+                    "0003: [0,1,1] TEXT_NODE(3) 'Two'",
+                    "0004: [0,1,2] ELEMENT_NODE(1) <span>",
+                    "0005: [0,1,2,0] TEXT_NODE(3) 'Three'",
+                    "0006: [0,1,2,1] TEXT_NODE(3) 'Four'",
+                    "0007: [0,2] ELEMENT_NODE(1) <span>",
+                    "0008: [0,2,0] TEXT_NODE(3) 'Five'",
                 ]);
 
             });
