@@ -200,8 +200,10 @@ function configureRenderer() {
             "Please provide a valid expression"
         );
 
+        const composite = driver(rerender);
+
         function rerender() {
-            return traverse(driver(rerender), expr, [FIRST]);
+            return traverse(composite, expr, [FIRST]);
         }
 
         return rerender();

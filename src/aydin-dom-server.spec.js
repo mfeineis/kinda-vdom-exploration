@@ -13,6 +13,10 @@ const {
     serialize,
 } = require("./testUtils");
 
+function delay(millis, value) {
+    return new Promise((resolve) => setTimeout(resolve(value), 100));
+}
+
 describe("aydin-dom-server", () => {
     const driver = AydinDomServer;
     const render = (it) => Aydin.render(driver(), it);
@@ -585,9 +589,10 @@ describe("The traits that both the DOM and DOMServer driver share", () => {
 
                     expect(generated).toBe(expected);
 
+                    // Delaying due to rate limiting on HTML5 validator side
                     await Promise.all([
                         validateHtml("<!DOCTYPE html>" + generated),
-                        validateHtml("<!DOCTYPE html>" + expected),
+                        delay(500, validateHtml("<!DOCTYPE html>" + expected)),
                     ]).then(([inResults, outResults]) => {
                         const inOk = inResults.messages.length === 0;
                         const outOk = outResults.messages.length === 0;
