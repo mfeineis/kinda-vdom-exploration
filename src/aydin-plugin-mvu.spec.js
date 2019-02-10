@@ -33,9 +33,9 @@ describe("the Aydin Model View Update plugin for state management", () => {
             expect(result[0][1].onClick).toEqual(null);
         });
 
-        it("(MAYBE?) should take over state for enhanced templates even when the render is not driven by the MVU plugin", () => {
+        it("should take over state management for enhanced templates when the render is driven by the MVU plugin", () => {
             const { render } = Aydin;
-            const update = (msg, model) => {
+            const mvu = plugin((msg, model) => {
                 if (!msg) {
                     return [{ count1: 0 }];
                 }
@@ -46,29 +46,29 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 default:
                     return [model];
                 }
-            };
-            const mvu = plugin(update);
-            const connected = mvu.lens(({ count1 }) => ({ count: count1 }))(counter);
+            });
+            const connected = plugin.lens(({ count1 }) => ({ count: count1 }))(counter);
 
             const result = render(mvu(identityDriver), connected);
             expect(result[0][1].onClick).toEqual(["INC", 1]);
         });
 
-        it("(MAYBE?) should leave the behavior of enhanced templates intact if used without the plugin being present when rendering", () => {
+        it("should leave the behavior of the base templates intact if used without the plugin being present when rendering", () => {
             const { render } = Aydin;
             const input = { a: "a", b: "b" };
             const mvu = plugin(() => [input]);
 
-            const fn = ({ a, b }) => ["", a, b];
-            const swapArgs = ({ a, b }) => ({ a: b, b: a });
-            const connected = mvu.lens(swapArgs)(fn);
+            const fn = ({ a, b } = {}) => ["", a, b];
+            const swap = ({ a, b } = {}) => ({ a: b, b: a });
+
+            const connected = plugin.lens(swap)(fn);
 
             expect(fn(input)).toEqual(["", "a", "b"]);
-            expect(connected(input)).toEqual(["", "b", "a"]);
+            expect(connected(input)).toEqual(["", "a", "b"]);
 
             expect(render(identityDriver, [fn, input])).toEqual(["", "a", "b"]);
-            expect(render(identityDriver, connected)).toEqual(["", "b", "a"]);
-            expect(render(identityDriver, [connected, {}])).toEqual(["", "b", "a"]);
+            expect(render(identityDriver, connected)).toEqual(["", "", ""]);
+            expect(render(identityDriver, [connected, input])).toEqual(["", "a", "b"]);
 
             expect(render(mvu(identityDriver), [fn, input])).toEqual(["", "a", "b"]);
             expect(render(mvu(identityDriver), connected)).toEqual(["", "b", "a"]);

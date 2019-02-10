@@ -141,7 +141,7 @@
         const mvu = AydinPluginMvu(function () {
             return [{ who: "World" }];
         });
-        const tmpl = mvu.lens(function (state) {
+        const tmpl = AydinPluginMvu.lens(function (state) {
             return state.who;
         })(function (who) {
             return ["i", "Hello, " + who + "!"];
@@ -149,10 +149,10 @@
 
         const node = document.createElement("div");
 
-         Aydin.render(mvu(AydinDom(node)), tmpl);
+        Aydin.render(mvu(AydinDom(node)), tmpl);
 
         const pre = document.createElement("pre");
-        pre.innerText = Aydin.render(AydinDomServer(), tmpl);
+        pre.innerText = Aydin.render(mvu(AydinDomServer()), tmpl);
         node.appendChild(pre);
 
         document.body.appendChild(node);

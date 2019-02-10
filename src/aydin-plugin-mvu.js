@@ -1,17 +1,23 @@
 
+const LENS_EXPANDO = "__aydin_plugin_mvu_lens";
+
 const FIRST = 0;
 
-function plugin(update) {
-    const LENS_EXPANDO = "__aydin_plugin_mvu_lens";
-    const TMPL_EXPANDO = "__aydin_plugin_mvu_tmpl";
+function baseExpand(tmpl, props, children) {
+    return tmpl.call(null, props, children);
+}
 
+function plugin(update) {
     const init = update(null);
     const model = init[FIRST];
 
     function driver(decoratee) {
 
         function expand(tmpl, props, children) {
-            return tmpl.call(null, props, children);
+            if (tmpl[LENS_EXPANDO]) {
+                return tmpl.call(null, tmpl[LENS_EXPANDO](model), children);
+            }
+            return (decoratee.expand || baseExpand)(tmpl, props, children);
         }
 
         function visit(tag, props, nodeType, path) {
@@ -26,26 +32,25 @@ function plugin(update) {
         };
     }
 
-    function lens(get) {
-        return function connect(tmpl) {
-
-            function connected(props, children) {
-                return tmpl(get(model), children);
-            }
-
-            /* eslint-disable immutable/no-mutation */
-            connected[LENS_EXPANDO] = get;
-            connected[TMPL_EXPANDO] = tmpl;
-            /* eslint-enable immutable/no-mutation */
-
-            return connected;
-        };
-    }
-    // eslint-disable-next-line immutable/no-mutation
-    driver.lens = lens;
-
     return driver;
 }
+
+function lens(get) {
+    return function connect(tmpl) {
+
+        function connected() {
+            return tmpl.apply(null, arguments);
+        }
+
+        /* eslint-disable immutable/no-mutation */
+        connected[LENS_EXPANDO] = get;
+        /* eslint-enable immutable/no-mutation */
+
+        return connected;
+    };
+}
+// eslint-disable-next-line immutable/no-mutation
+plugin.lens = lens;
 
 /* eslint-disable immutable/no-mutation */
 plugin.version = "0.1.0";
