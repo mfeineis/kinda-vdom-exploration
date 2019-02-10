@@ -6,9 +6,12 @@ const INVALID_NODE = utils.INVALID_NODE;
 const TEXT_NODE = utils.TEXT_NODE;
 
 const invariant = utils.invariant;
+const isFunction = utils.isFunction;
 const isSpecialTag = utils.isSpecialTag;
 
 const TOPLEVEL = 1;
+
+function noop() {}
 
 function driver(root) {
 
@@ -19,80 +22,87 @@ function driver(root) {
 
     const document = root.ownerDocument;
 
-    function reduce(children) {
-        children.forEach(function (child) {
-            root.appendChild(child);
-        });
-    }
+    return function dom() {
 
-    function visit(tag, props, nodeType, path) {
-        if (nodeType === INVALID_NODE) {
-            // TODO: Should we really panic on invalid tag names?
-            throw new Error("Invalid tag name \"" + tag + "\"");
-        }
-
-        switch (nodeType) {
-        case ELEMENT_NODE: {
-            const node = document.createElement(tag);
-
-            Object.keys(props).forEach(function (key) {
-                const value = props[key];
-
-                if (/^on/.test(key)) {
-                    const event = key.toLocaleLowerCase().replace(/^on/, "");
-                    node.addEventListener(event, function (ev) {
-                        value(props, ev);
-                    });
-                    return;
-                }
-
-                /* eslint-disable immutable/no-mutation */
-                switch (key) {
-                case "classList":
-                    if (value.length) {
-                        // Not using `classList` property because IE11 doesn't
-                        // support it for SVG elements
-                        node.className = value.join(" ");
-                    }
-                    break;
-                case "data":
-                    Object.keys(value).forEach(function (name) {
-                        node.dataset[name] = value[name];
-                    });
-                    break;
-                default:
-                    node[key] = value;
-                    break;
-                }
-                /* eslint-enable immutable/no-mutation */
+        function reduce(children) {
+            children.forEach(function (child) {
+                root.appendChild(child);
             });
+        }
 
-            if (path.length === TOPLEVEL) {
-                root.appendChild(node);
+        function visit(tag, props, nodeType, path, bubble) {
+            if (nodeType === INVALID_NODE) {
+                // TODO: Should we really panic on invalid tag names?
+                throw new Error("Invalid tag name \"" + tag + "\"");
             }
 
-            return function (children) {
-                children.forEach(function (child) {
-                    node.appendChild(child);
+            switch (nodeType) {
+            case ELEMENT_NODE: {
+                const node = document.createElement(tag);
+
+                Object.keys(props).forEach(function (key) {
+                    const value = props[key];
+
+                    if (/^on/.test(key)) {
+                        const evt = key.toLocaleLowerCase().replace(/^on/, "");
+                        node.addEventListener(evt, function (ev) {
+                            if (isFunction(value)) {
+                                value(props, ev);
+                                return;
+                            }
+                            (bubble || noop)([value], path);
+                        });
+                        return;
+                    }
+
+                    /* eslint-disable immutable/no-mutation */
+                    switch (key) {
+                    case "classList":
+                        if (value.length) {
+                            // Not using `classList` property because IE11
+                            // doesn't support it for SVG elements
+                            node.className = value.join(" ");
+                        }
+                        break;
+                    case "data":
+                        Object.keys(value).forEach(function (name) {
+                            node.dataset[name] = value[name];
+                        });
+                        break;
+                    default:
+                        node[key] = value;
+                        break;
+                    }
+                    /* eslint-enable immutable/no-mutation */
                 });
-                return node;
-            };
-        }
-        case TEXT_NODE: {
-            const node = document.createTextNode(tag);
-            if (path.length === TOPLEVEL) {
-                root.appendChild(node);
+
+                if (path.length === TOPLEVEL) {
+                    root.appendChild(node);
+                }
+
+                return function (children) {
+                    children.forEach(function (child) {
+                        node.appendChild(child);
+                    });
+                    return node;
+                };
             }
+            case TEXT_NODE: {
+                const node = document.createTextNode(tag);
+                if (path.length === TOPLEVEL) {
+                    root.appendChild(node);
+                }
 
-            return node;
+                return node;
+            }
+            }
         }
-        }
-    }
 
-    return {
-        isSpecialTag: isSpecialTag,
-        reduce: reduce,
-        visit: visit,
+        return {
+            isSpecialTag: isSpecialTag,
+            reduce: reduce,
+            visit: visit,
+        };
     };
 }
 

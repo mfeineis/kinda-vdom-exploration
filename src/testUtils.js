@@ -7,7 +7,7 @@ const isArray = utils.isArray;
 const isFunction = utils.isFunction;
 const isObject = utils.isObject;
 
-const identityDriver = Object.freeze({
+const identityDriver = () => Object.freeze({
     visit: (expr, props, nodeType) => {
         switch (nodeType) {
         case 1:
@@ -21,26 +21,39 @@ const identityDriver = Object.freeze({
     },
 });
 
-const tracable = (driver, trace) => Object.freeze({
-    expand: driver.expand,
-    isSpecialTag: driver.isSpecialTag,
-    reduce: driver.reduce,
-    visit: (expr, props, nodeType, path) => {
-        switch (nodeType) {
-        case 1:
-            trace.push(
-                `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] ELEMENT_NODE(${nodeType}) <${expr}>`
-            );
-            break;
-        case 3:
-            trace.push(
-                `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] TEXT_NODE(${nodeType}) '${expr}'`
-            );
-            break;
-        }
-        return driver.visit(expr, props, nodeType, path);
-    },
-});
+const nonReactive = (next) => () => {
+    const decoratee = next(() => {});
+    return Object.freeze({
+        expand: decoratee.expand,
+        isSpecialTag: decoratee.isSpecialTag,
+        reduce: decoratee.reduce,
+        visit: decoratee.visit,
+    });
+};
+
+const tracable = (next, trace) => (signal) => {
+    const decoratee = next(signal);
+    return Object.freeze({
+        expand: decoratee.expand,
+        isSpecialTag: decoratee.isSpecialTag,
+        reduce: decoratee.reduce,
+        visit: (expr, props, nodeType, path, bubble) => {
+            switch (nodeType) {
+            case 1:
+                trace.push(
+                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] ELEMENT_NODE(${nodeType}) <${expr}>`
+                );
+                break;
+            case 3:
+                trace.push(
+                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] TEXT_NODE(${nodeType}) '${expr}'`
+                );
+                break;
+            }
+            return decoratee.visit(expr, props, nodeType, path, bubble);
+        },
+    });
+};
 
 /**
  * @example
@@ -235,8 +248,8 @@ function simulate(event, node, driver = identityDriver) {
         }
     }
 
-    if (isFunction(driver.signal)) {
-        driver.signal(result);
+    if (isFunction(driver.dispatch)) {
+        driver.dispatch(result);
     }
 
     return result;
@@ -246,6 +259,7 @@ function simulate(event, node, driver = identityDriver) {
 exports.html = html;
 exports.identityDriver = identityDriver;
 exports.makeRoot = makeRoot;
+exports.nonReactive = nonReactive;
 exports.range = range;
 exports.serialize = serialize;
 exports.simulate = simulate;

@@ -194,6 +194,19 @@ describe("aydin-dom", () => {
                     expect(onClick.mock.calls[0][1]).toBe(ev);
                 });
 
+                it("should try to signal upstream when it can't handle an event and not die", () => {
+                    const root = makeRoot();
+                    const props = { onClick: ["MSG"] };
+
+                    expect(() => {
+                        render(root, ["button", props]);
+                        const button = root.childNodes[FIRST];
+                        const evts = simulate("click", button);
+
+                        expect(evts).toHaveLength(1);
+                    }).not.toThrow();
+                });
+
             });
 
         });

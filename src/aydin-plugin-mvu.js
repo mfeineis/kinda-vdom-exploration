@@ -16,33 +16,46 @@ function plugin(update) {
     // eslint-disable-next-line immutable/no-let
     let model = init[FIRST];
 
-    function driver(decoratee) {
+    function dispatch(msgs) {
+        msgs.forEach(function (msg) {
+            const result = update(model, msg);
+            model = result[FIRST];
+        });
+    }
 
-        function expand(tmpl, props, children) {
-            if (tmpl[LENS_EXPANDO]) {
-                return tmpl.call(null, tmpl[LENS_EXPANDO](model), children);
+    function driver(next) {
+
+        function mvu(signal) {
+            const decoratee = next(signal);
+
+            function expand(tmpl, props, children) {
+                if (tmpl[LENS_EXPANDO]) {
+                    return tmpl.call(null, tmpl[LENS_EXPANDO](model), children);
+                }
+                return (decoratee.expand || baseExpand)(tmpl, props, children);
             }
-            return (decoratee.expand || baseExpand)(tmpl, props, children);
+
+            function handle(msgs) {
+                dispatch(msgs);
+                signal();
+            }
+
+            function visit(tag, props, nodeType, path) {
+                return decoratee.visit(tag, props, nodeType, path, handle);
+            }
+
+            return {
+                expand: expand,
+                isSpecialTag: decoratee.isSpecialTag,
+                reduce: decoratee.reduce,
+                visit: visit,
+            };
+
         }
 
-        function signal(msgs) {
-            msgs.forEach(function (msg) {
-                const result = update(model, msg);
-                model = result[FIRST];
-            });
-        }
-
-        function visit(tag, props, nodeType, path) {
-            return decoratee.visit(tag, props, nodeType, path);
-        }
-
-        return {
-            expand: expand,
-            isSpecialTag: decoratee.isSpecialTag,
-            reduce: decoratee.reduce,
-            signal: signal,
-            visit: visit,
-        };
+        // eslint-disable-next-line immutable/no-mutation
+        mvu.dispatch = dispatch;
+        return mvu;
     }
 
     return driver;

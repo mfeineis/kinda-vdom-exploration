@@ -192,7 +192,7 @@ function configureRenderer() {
     function render(driver, expr) {
 
         invariant(
-            typeof driver === "object" && isFunction(driver.visit),
+            typeof isFunction(driver),
             "Please provide a valid 'driver' into 'render'"
         );
         invariant(
@@ -200,7 +200,11 @@ function configureRenderer() {
             "Please provide a valid expression"
         );
 
-        return traverse(driver, expr, [FIRST]);
+        function rerender() {
+            return traverse(driver(rerender), expr, [FIRST]);
+        }
+
+        return rerender();
     }
 
     return render;

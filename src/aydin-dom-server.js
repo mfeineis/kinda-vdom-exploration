@@ -96,42 +96,44 @@ function spreadProps(props) {
 }
 
 function driver() {
+    return function domServer() {
 
-    function visit(tag, props, nodeType) {
-        if (nodeType === INVALID_NODE) {
-            // TODO: Should we really panic on invalid tag names?
-            throw new Error("Invalid tag name \"" + tag + "\"");
-        }
+        function visit(tag, props, nodeType) {
+            if (nodeType === INVALID_NODE) {
+                // TODO: Should we really panic on invalid tag names?
+                throw new Error("Invalid tag name \"" + tag + "\"");
+            }
 
-        if (nodeType === TEXT_NODE) {
-            return tag;
-        }
+            if (nodeType === TEXT_NODE) {
+                return tag;
+            }
 
-        if (nodeType === DOCUMENT_TYPE_NODE) {
-            // FIXME: Validate doctype structure
-            return "<" + tag + ">";
-        }
+            if (nodeType === DOCUMENT_TYPE_NODE) {
+                // FIXME: Validate doctype structure
+                return "<" + tag + ">";
+            }
 
-        if (isVoidElement(tag)) {
+            if (isVoidElement(tag)) {
+                const propsString = spreadProps(props);
+                return "<" + tag + propsString + "/>";
+            }
+
             const propsString = spreadProps(props);
-            return "<" + tag + propsString + "/>";
+
+            return function (children) {
+                return "<" + tag + propsString + ">" +
+                    children.join("") +
+                    "</" + tag + ">";
+            };
         }
 
-        const propsString = spreadProps(props);
-
-        return function (children) {
-            return "<" + tag + propsString + ">" +
-                children.join("") +
-                "</" + tag + ">";
+        return {
+            isSpecialTag: isSpecialTag,
+            reduce: function (nodes) {
+                return nodes.join("");
+            },
+            visit: visit,
         };
-    }
-
-    return {
-        isSpecialTag: isSpecialTag,
-        reduce: function (nodes) {
-            return nodes.join("");
-        },
-        visit: visit,
     };
 }
 
