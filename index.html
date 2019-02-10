@@ -47,7 +47,7 @@
          baseUrl: "./dist",
      });
 
-     require(["aydin", "aydin-dom", "aydin-dom-server", "aydin-transform-markdown"], function (Aydin, AydinDom, AydinDomServer, markdown) {
+     require(["aydin", "aydin-dom", "aydin-dom-server", "aydin-plugin-mvu", "aydin-transform-markdown"], function (Aydin, AydinDom, AydinDomServer, AydinPluginMvu, markdown) {
 
      const makeSample = function (title, data) {
          console.log("makeSample", title, data);
@@ -55,7 +55,7 @@
 
          const node = document.createElement("div");
          node.id = "sample" + makeSample.count;
-         const code = Aydin.render(AydinDomServer, data);
+         const code = Aydin.render(AydinDomServer(), data);
          node.innerHTML = "<h2>" + title + "</h2>" +
             "<pre>" + JSON.stringify(data) + "</pre>" +
             "<div class='sample'>" + code + "</div>";
@@ -117,10 +117,10 @@
                     ],
                 ],
             ];
-        Aydin.render(AydinDom, expr, node);
+        Aydin.render(AydinDom(node), expr);
 
         const pre = document.createElement("pre");
-        pre.innerText = Aydin.render(AydinDomServer, expr);
+        pre.innerText = Aydin.render(AydinDomServer(), expr);
         node.appendChild(pre);
 
         document.body.appendChild(node);
@@ -136,6 +136,27 @@
              "[A link to example.org](http://example.org)",
          ].join("\n")]
      );
+
+     {
+        const mvu = AydinPluginMvu(function () {
+            return [{ who: "World" }];
+        });
+        const tmpl = mvu.lens(function (state) {
+            return state.who;
+        })(function (who) {
+            return ["i", "Hello, " + who + "!"];
+        });
+
+        const node = document.createElement("div");
+
+         Aydin.render(mvu(AydinDom(node)), tmpl);
+
+        const pre = document.createElement("pre");
+        pre.innerText = Aydin.render(AydinDomServer(), tmpl);
+        node.appendChild(pre);
+
+        document.body.appendChild(node);
+     }
 
      });
 
