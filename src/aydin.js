@@ -101,7 +101,19 @@ function extractTagMeta(tagName) {
     return [tag, id, classNames];
 }
 
+function identity(it) {
+    return it;
+}
+
 function configureRenderer() {
+
+    function expand(tmpl, props, children) {
+        return tmpl.call(null, props, children);
+    }
+
+    function isSpecialTag() {
+        return [false];
+    }
 
     // FIXME: Remove Recursion!
     function traverse(driver, expr, path) {
@@ -115,7 +127,7 @@ function configureRenderer() {
         }
 
         if (isArray(expr[FIRST])) {
-            return driver.reduce(
+            return (driver.reduce || identity)(
                 expr.map(function (it, i) {
                     return traverse(driver, it, path.concat([i]));
                 })
@@ -123,7 +135,7 @@ function configureRenderer() {
         }
 
         if (expr[FIRST] === "") {
-            return driver.reduce(
+            return (driver.reduce || identity)(
                 expr.map(function (it, i) {
                     return traverse(driver, it, path.concat([i]));
                 })
@@ -137,10 +149,10 @@ function configureRenderer() {
         const hasProps = isObject(maybeProps);
         const children = hasProps ? childrenWithoutProps : allChildren;
 
-        const specialResult = driver.isSpecialTag(tagName);
+        const specialResult = (driver.isSpecialTag || isSpecialTag)(tagName);
         const isSpecial = specialResult[FIRST];
-        const specialNodeType = specialResult[SECOND];
         if (isSpecial) {
+            const specialNodeType = specialResult[SECOND];
             return driver.visit(tagName, null, specialNodeType, path);
         }
 
@@ -152,7 +164,11 @@ function configureRenderer() {
             assembleProps(id, classNames, hasProps ? maybeProps : {});
 
         if (isFunction(tag)) {
-            return traverse(driver, tag.call(null, props, children), path);
+            return traverse(
+                driver,
+                (driver.expand || expand)(tag, props, children),
+                path
+            );
         }
 
         const finalize = driver.visit(tag, props, ELEMENT_NODE, path);
@@ -169,14 +185,11 @@ function configureRenderer() {
     function render(driver, expr) {
 
         invariant(
-            typeof driver === "object" &&
-                driver.isSpecialTag &&
-                driver.reduce &&
-                driver.visit,
+            typeof driver === "object" && isFunction(driver.visit),
             "Please provide a valid 'driver' into 'render'"
         );
         invariant(
-            expr && (isString(expr) || isArray(expr)),
+            expr && (isString(expr) || isArray(expr) || isFunction(expr)),
             "Please provide a valid expression"
         );
 

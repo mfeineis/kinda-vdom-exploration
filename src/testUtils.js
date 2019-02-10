@@ -3,11 +3,12 @@ const ELEMENT_NODE = utils.ELEMENT_NODE;
 const TEXT_NODE = utils.TEXT_NODE;
 
 const identityDriver = Object.freeze({
-    isSpecialTag: () => [false],
-    reduce: (children) => children,
-    visit: (expr, _, nodeType) => {
+    visit: (expr, props, nodeType) => {
         switch (nodeType) {
         case 1:
+            if (Object.keys(props).length) {
+                return (children) => [expr, props, ...children];
+            }
             return (children) => [expr, ...children];
         case 3:
             return expr;
@@ -16,8 +17,9 @@ const identityDriver = Object.freeze({
 });
 
 const tracable = (driver, trace) => Object.freeze({
-    isSpecialTag: (tag) => driver.isSpecialTag(tag),
-    reduce: (...args) => driver.reduce(...args),
+    expand: driver.expand,
+    isSpecialTag: driver.isSpecialTag,
+    reduce: driver.reduce,
     visit: (expr, props, nodeType, path) => {
         switch (nodeType) {
         case 1:
