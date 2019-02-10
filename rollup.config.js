@@ -53,6 +53,20 @@ export default [
         ],
     },
     {
+        input: "src/aydin-plugin-mvu.js",
+        output: {
+            file: "dist/aydin-plugin-mvu.js",
+            format: "umd",
+            name: "AydinPluginMvu",
+            sourcemap: true,
+        },
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            production && terser(terserOptions),
+        ],
+    },
+    {
         input: "src/aydin-transform-markdown.js",
         output: {
             file: "dist/aydin-transform-markdown.js",
