@@ -123,6 +123,13 @@ function configureRenderer() {
         }
 
         if (!isArray(expr)) {
+            if (isFunction(expr)) {
+                return traverse(
+                    driver,
+                    (driver.expand || expand)(expr),
+                    path
+                );
+            }
             return "";
         }
 

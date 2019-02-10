@@ -52,7 +52,7 @@ describe("aydin-dom", () => {
             )).toThrow();
             expect(() => render(
                 { ownerDocument: { createElement: jest.fn() } },
-                () => {}
+                /regex/
             )).toThrow();
         });
 

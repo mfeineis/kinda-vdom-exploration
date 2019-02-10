@@ -509,6 +509,12 @@ describe("The traits that both the DOM and DOMServer driver share", () => {
                         ]));
                 });
 
+                it("should expand static function templates without them being the first element of an expression", () => {
+                    const render = makeRender();
+                    const fn = jest.fn(() => "Hello, World!");
+                    expect(render(fn)).toBe("Hello, World!");
+                });
+
             });
 
             describe("rendering complex structures", () => {
