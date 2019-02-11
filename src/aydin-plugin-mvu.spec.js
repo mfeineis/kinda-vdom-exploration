@@ -2,6 +2,7 @@ const pkg = require("../package.json");
 
 const Aydin = require("./aydin");
 const plugin = require("./aydin-plugin-mvu");
+const { DOMDRIVER_MISSING_HANDLER } = require("./signals");
 const { identityDriver, nonReactive, simulate } = require("./testUtils.js");
 
 describe("the Aydin Model View Update plugin for state management", () => {
@@ -161,11 +162,23 @@ describe("the Aydin Model View Update plugin for state management", () => {
                     expand: decoratee.expand,
                     isSpecialTag: decoratee.isSpecialTag,
                     reduce: decoratee.reduce,
-                    visit: (expr, props, nodeType, path, bubble) => {
+                    visit: (expr, props, nodeType, path) => {
                         if (bubbleCount === 0) {
-                            bubble(["GLIDE!"]);
+                            signal({
+                                data: {
+                                    value: ["FAKE", "with", "params"],
+                                },
+                                topic: DOMDRIVER_MISSING_HANDLER,
+                            });
+                        } else if (bubbleCount === 1){
+                            signal({
+                                data: {
+                                    value: ["UNKNOWN", "with", "params"],
+                                },
+                                topic: DOMDRIVER_MISSING_HANDLER,
+                            });
                         } else {
-                            bubble([]);
+                            signal();
                         }
 
                         bubbleCount += 1;
@@ -174,12 +187,17 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 });
             };
 
-            const mvu = plugin((model) => {
+            const mvu = plugin((model, msg) => {
                 if (!model) {
                     return [{ what: "Bold!" }];
                 }
 
-                return [{ what: "Flawed" }];
+                switch (msg[0]) {
+                case "FAKE":
+                    return [{ what: "Flawed" }];
+                default:
+                    return [model];
+                }
             });
 
             const fn = plugin.lens()(({ what }) => [
@@ -191,6 +209,12 @@ describe("the Aydin Model View Update plugin for state management", () => {
             expect(expr).toEqual([
                 ["i", "Nothing"],
                 ["b", { onClick: ["anything"] }, "Bold!"],
+            ]);
+
+            simulate("click", expr[1], driver);
+            expect(render(driver, fn)).toEqual([
+                ["i", "Nothing"],
+                ["b", { onClick: ["anything"] }, "Flawed"],
             ]);
 
             simulate("click", expr[1], driver);

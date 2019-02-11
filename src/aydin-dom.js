@@ -5,13 +5,14 @@ const ELEMENT_NODE = utils.ELEMENT_NODE;
 const INVALID_NODE = utils.INVALID_NODE;
 const TEXT_NODE = utils.TEXT_NODE;
 
+const signals = require("./signals");
+const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
+
 const invariant = utils.invariant;
 const isFunction = utils.isFunction;
 const isSpecialTag = utils.isSpecialTag;
 
 const TOPLEVEL = 1;
-
-function noop() {}
 
 function driver(root) {
 
@@ -22,7 +23,7 @@ function driver(root) {
 
     const document = root.ownerDocument;
 
-    return function dom() {
+    return function dom(signal) {
 
         function reduce(children) {
             children.forEach(function (child) {
@@ -30,7 +31,7 @@ function driver(root) {
             });
         }
 
-        function visit(tag, props, nodeType, path, bubble) {
+        function visit(tag, props, nodeType, path) {
             if (nodeType === INVALID_NODE) {
                 // TODO: Should we really panic on invalid tag names?
                 throw new Error("Invalid tag name \"" + tag + "\"");
@@ -50,7 +51,12 @@ function driver(root) {
                                 value(props, ev);
                                 return;
                             }
-                            (bubble || noop)([value], path);
+                            signal({
+                                data: {
+                                    value: value,
+                                },
+                                topic: DOMDRIVER_MISSING_HANDLER,
+                            });
                         });
                         return;
                     }

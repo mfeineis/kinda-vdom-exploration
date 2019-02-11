@@ -92,6 +92,7 @@ module.exports = {
                 "src/aydin-dom-server.js",
                 "src/aydin-plugin-mvu.js",
                 "src/aydin-transform-markdown.js",
+                "src/signals.js",
                 "src/utils.js",
             ],
             "parserOptions": {
