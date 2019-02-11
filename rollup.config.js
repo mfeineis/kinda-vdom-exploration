@@ -67,6 +67,20 @@ export default [
         ],
     },
     {
+        input: "src/aydin-request.js",
+        output: {
+            file: "dist/aydin-request.js",
+            format: "umd",
+            name: "AydinRequest",
+            sourcemap: true,
+        },
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            production && terser(terserOptions),
+        ],
+    },
+    {
         input: "src/aydin-transform-markdown.js",
         output: {
             file: "dist/aydin-transform-markdown.js",

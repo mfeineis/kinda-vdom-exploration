@@ -47,7 +47,11 @@
          baseUrl: "./dist",
      });
 
-     require(["aydin", "aydin-dom", "aydin-dom-server", "aydin-plugin-mvu", "aydin-transform-markdown"], function (Aydin, AydinDom, AydinDomServer, AydinPluginMvu, markdown) {
+     require(["aydin", "aydin-dom", "aydin-dom-server", "aydin-plugin-mvu", "aydin-request", "aydin-transform-markdown"], function (Aydin, AydinDom, AydinDomServer, AydinPluginMvu, request, markdown) {
+
+     request("http://example.org", null, function () {
+         console.log('request', arguments);
+     });
 
      const makeSample = function (title, data) {
          console.log("makeSample", title, data);
