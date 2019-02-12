@@ -206,17 +206,28 @@ describe("AydinRequest", () => {
 
     it("should report HTTP progress and hand in the request api", (done) => {
         let xhr = null;
+        let n = 0;
         const rq = configureRequest(createXhr((created) => xhr = created));
 
         rq("blubb", {
             onProgress(evt, req) {
-                expect(typeof req.abort).toBe("function");
-                expect(evt).toEqual({
-                    lengthComputable: true,
-                    loaded: 64,
-                    total: 128,
-                });
-                done();
+                if (n === 0) {
+                    expect(typeof req.abort).toBe("function");
+                    expect(evt).toEqual({
+                        loaded: 64,
+                        percentage: 50,
+                        total: 128,
+                    });
+                    n += 1;
+                } else {
+                    expect(evt).toEqual({
+                        indeterminate: true,
+                        loaded: NaN,
+                        percentage: 0,
+                        total: NaN,
+                    });
+                    done();
+                }
             },
         });
 
@@ -224,6 +235,10 @@ describe("AydinRequest", () => {
             lengthComputable: true,
             loaded: 64,
             total: 128,
+        });
+
+        xhr.onprogress({
+            lengthComputable: false,
         });
     });
 
@@ -240,11 +255,28 @@ describe("AydinRequest", () => {
         xhr.ontimeout(expectedError);
     });
 
-    it("should hand over OK responses ", (done) => {
+    it("should hand over OK responses", (done) => {
         let xhr = null;
         const rq = configureRequest(createXhr((created) => xhr = created));
 
         rq("blubb", null, (err, response) => {
+            expect(err).toBe(null);
+            expect(response.responseText).toBe("Hello, World!");
+            expect(response.status).toBe(200);
+            done();
+        });
+
+        xhr.readyState = 4;
+        xhr.responseText = "Hello, World!";
+        xhr.status = 200;
+        xhr.onreadystatechange();
+    });
+
+    it("should allow for synchronous requests with 'sync'", (done) => {
+        let xhr = null;
+        const rq = configureRequest(createXhr((created) => xhr = created));
+
+        rq("blubb", { sync: true }, (err, response) => {
             expect(err).toBe(null);
             expect(response.responseText).toBe("Hello, World!");
             expect(response.status).toBe(200);

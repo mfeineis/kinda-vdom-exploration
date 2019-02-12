@@ -4,6 +4,9 @@ const DONE = 4;
 const HTTP_OK = 200;
 const HTTP_BAD_REQUEST = 400;
 
+const ONE_HUNDRED = 100;
+const TEN_SECONDS = 10000;
+
 function noop() {}
 
 function configureRequest(maybeXhr, window) {
@@ -20,13 +23,13 @@ function configureRequest(maybeXhr, window) {
             (maybeCallback || noop)(error, response);
         };
 
-        const async = true;
+        const async = !options.sync;
         const body = options.body || null;
         const headers = options.headers || {};
         const method = (options.method || "GET").toUpperCase();
         const onProgress = options.onProgress || noop;
-        const timeout = 10000;
-        const withCredentials = options.withCredentials || false;
+        const timeout = options.timeout || TEN_SECONDS;
+        const withCredentials = !!options.withCredentials;
 
         try {
             const xhr = new XMLHttpRequest();
@@ -63,7 +66,20 @@ function configureRequest(maybeXhr, window) {
             };
 
             xhr.onprogress = function (evt) {
-                onProgress(evt, api);
+                if (evt.lengthComputable) {
+                    onProgress({
+                        loaded: evt.loaded,
+                        percentage: ONE_HUNDRED * (evt.loaded / evt.total),
+                        total: evt.total,
+                    }, api);
+                } else {
+                    onProgress({
+                        indeterminate: true,
+                        loaded: NaN,
+                        percentage: 0,
+                        total: NaN,
+                    }, api);
+                }
             };
 
             xhr.onreadystatechange = function () {
