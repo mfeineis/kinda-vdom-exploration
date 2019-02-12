@@ -31,8 +31,8 @@ const nonReactive = (next) => () => {
     });
 };
 
-const tracable = (next, trace) => (signal) => {
-    const decoratee = next(signal);
+const tracable = (next, trace) => (notify) => {
+    const decoratee = next(notify);
     return Object.freeze({
         expand: decoratee.expand,
         isSpecialTag: decoratee.isSpecialTag,

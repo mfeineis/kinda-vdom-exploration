@@ -1,3 +1,6 @@
+const signals = require("./signals");
+const CORE_RERENDER = signals.CORE_RERENDER;
+
 const utils = require("./utils");
 
 const DOCUMENT_TYPE_NODE = utils.DOCUMENT_TYPE_NODE;
@@ -202,11 +205,13 @@ function configureRenderer() {
 
         const composite = driver(rerender);
 
-        function rerender() {
-            return traverse(composite, expr, [FIRST]);
+        function rerender(signal) {
+            if (signal === CORE_RERENDER) {
+                return traverse(composite, expr, [FIRST]);
+            }
         }
 
-        return rerender();
+        return rerender(CORE_RERENDER);
     }
 
     return render;

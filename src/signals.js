@@ -1,5 +1,6 @@
 
 /* eslint-disable immutable/no-mutation */
-exports.DOMDRIVER_MISSING_HANDLER = 1001;
+exports.CORE_RERENDER = 1000;
+exports.DOMDRIVER_MISSING_HANDLER = 2000;
 /* eslint-enable immutable/no-mutation */
 

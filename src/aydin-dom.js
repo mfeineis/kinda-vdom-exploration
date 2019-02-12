@@ -23,7 +23,7 @@ function driver(root) {
 
     const document = root.ownerDocument;
 
-    return function dom(signal) {
+    return function dom(notify) {
 
         function reduce(children) {
             children.forEach(function (child) {
@@ -51,11 +51,8 @@ function driver(root) {
                                 value(props, ev);
                                 return;
                             }
-                            signal({
-                                data: {
-                                    value: value,
-                                },
-                                topic: DOMDRIVER_MISSING_HANDLER,
+                            notify(DOMDRIVER_MISSING_HANDLER, {
+                                value: value,
                             });
                         });
                         return;

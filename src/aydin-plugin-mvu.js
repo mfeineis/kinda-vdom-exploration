@@ -1,4 +1,5 @@
 const signals = require("./signals");
+const CORE_RERENDER = signals.CORE_RERENDER;
 const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
 
 const LENS_EXPANDO = "__aydin_plugin_mvu_lens";
@@ -35,19 +36,19 @@ function plugin(update) {
 
     function driver(next) {
 
-        function mvu(signal) {
+        function mvu(notify) {
 
-            function intercept(evt) {
-                if (evt && evt.topic === DOMDRIVER_MISSING_HANDLER) {
-                    const msgs = [evt.data.value];
+            function intercept(evt, data) {
+                if (evt === DOMDRIVER_MISSING_HANDLER) {
+                    const msgs = [data.value];
                     if (dispatch(msgs)) {
-                        signal(evt);
+                        notify(CORE_RERENDER);
                         return;
                     }
                     return;
                 }
 
-                signal(evt);
+                notify(evt, data);
             }
 
             const decoratee = next(intercept);
@@ -59,15 +60,11 @@ function plugin(update) {
                 return (decoratee.expand || baseExpand)(tmpl, props, children);
             }
 
-            function visit(tag, props, nodeType, path) {
-                return decoratee.visit(tag, props, nodeType, path);
-            }
-
             return {
                 expand: expand,
                 isSpecialTag: decoratee.isSpecialTag,
                 reduce: decoratee.reduce,
-                visit: visit,
+                visit: decoratee.visit,
             };
 
         }

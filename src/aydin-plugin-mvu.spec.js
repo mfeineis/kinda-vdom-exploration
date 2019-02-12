@@ -156,29 +156,23 @@ describe("the Aydin Model View Update plugin for state management", () => {
         it("should support bubbling signals upstream when visiting nodes", () => {
             // eslint-disable-next-line immutable/no-let
             let bubbleCount = 0;
-            const bubbling = (next) => (signal) => {
-                const decoratee = next(signal);
+            const bubbling = (next) => (notify) => {
+                const decoratee = next(notify);
                 return Object.freeze({
                     expand: decoratee.expand,
                     isSpecialTag: decoratee.isSpecialTag,
                     reduce: decoratee.reduce,
                     visit: (expr, props, nodeType, path) => {
                         if (bubbleCount === 0) {
-                            signal({
-                                data: {
-                                    value: ["FAKE", "with", "params"],
-                                },
-                                topic: DOMDRIVER_MISSING_HANDLER,
+                            notify(DOMDRIVER_MISSING_HANDLER, {
+                                value: ["FAKE", "with", "params"],
                             });
                         } else if (bubbleCount === 1){
-                            signal({
-                                data: {
-                                    value: ["UNKNOWN", "with", "params"],
-                                },
-                                topic: DOMDRIVER_MISSING_HANDLER,
+                            notify(DOMDRIVER_MISSING_HANDLER, {
+                                value: ["UNKNOWN", "with", "params"],
                             });
                         } else {
-                            signal();
+                            notify();
                         }
 
                         bubbleCount += 1;
