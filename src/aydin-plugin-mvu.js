@@ -2,7 +2,7 @@ const signals = require("./signals");
 const CORE_RERENDER = signals.CORE_RERENDER;
 const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
 
-const LENS_EXPANDO = "__aydin_plugin_mvu_lens";
+const GET_EXPANDO = "__aydin_plugin_mvu_get";
 
 const FIRST = 0;
 const NONE = 0;
@@ -54,8 +54,8 @@ function plugin(update) {
             const decoratee = next(intercept);
 
             function expand(tmpl, props, children) {
-                if (tmpl[LENS_EXPANDO]) {
-                    return tmpl.call(null, tmpl[LENS_EXPANDO](model), children);
+                if (tmpl[GET_EXPANDO]) {
+                    return tmpl.call(null, tmpl[GET_EXPANDO](model), children);
                 }
                 return (decoratee.expand || baseExpand)(tmpl, props, children);
             }
@@ -77,22 +77,22 @@ function plugin(update) {
     return driver;
 }
 
-function lens(get) {
-    return function connect(tmpl) {
+function connect(get) {
+    return function (tmpl) {
 
         function connected() {
             return tmpl.apply(null, arguments);
         }
 
         /* eslint-disable immutable/no-mutation */
-        connected[LENS_EXPANDO] = get || identity;
+        connected[GET_EXPANDO] = get || identity;
         /* eslint-enable immutable/no-mutation */
 
         return connected;
     };
 }
 // eslint-disable-next-line immutable/no-mutation
-plugin.lens = lens;
+plugin.connect = connect;
 
 /* eslint-disable immutable/no-mutation */
 plugin.version = "0.1.0";

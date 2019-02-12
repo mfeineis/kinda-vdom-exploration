@@ -151,12 +151,12 @@
                 who: model.who,
             }];
         });
-        const counter = AydinPluginMvu.lens(function (state) {
+        const counter = AydinPluginMvu.connect(function (state) {
             return state.count;
         })(function (count) {
             return ["button", { onClick: ["INC", 1] }, "+", "(" + count + ")"];
         });
-        const tmpl = AydinPluginMvu.lens(function (state) {
+        const tmpl = AydinPluginMvu.connect(function (state) {
             return state.who;
         })(function (who) {
             return ["div", "Hello, " + who + "!", counter];

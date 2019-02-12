@@ -48,7 +48,7 @@ describe("the Aydin Model View Update plugin for state management", () => {
                     return [model];
                 }
             });
-            const connected = plugin.lens(({ count1 }) => ({ count: count1 }))(counter);
+            const connected = plugin.connect(({ count1 }) => ({ count: count1 }))(counter);
 
             const result = render(mvu(identityDriver), connected);
             expect(result[0][1].onClick).toEqual(["INC", 1]);
@@ -61,7 +61,7 @@ describe("the Aydin Model View Update plugin for state management", () => {
             const fn = ({ a, b } = {}) => ["", a, b];
             const swap = ({ a, b } = {}) => ({ a: b, b: a });
 
-            const connected = plugin.lens(swap)(fn);
+            const connected = plugin.connect(swap)(fn);
 
             expect(fn(input)).toEqual(["", "a", "b"]);
             expect(connected(input)).toEqual(["", "a", "b"]);
@@ -75,9 +75,9 @@ describe("the Aydin Model View Update plugin for state management", () => {
             expect(render(mvu(identityDriver), [connected, {}])).toEqual(["", "b", "a"]);
         });
 
-        it("should hand in the whole state if no lens is given", () => {
+        it("should hand in the whole state if no mapping is given", () => {
             const mvu = plugin(() => [{ count: 0 }]);
-            const connected = plugin.lens()(counter);
+            const connected = plugin.connect()(counter);
 
             const expr = render(mvu(identityDriver), connected);
             expect(expr).toEqual([
@@ -100,7 +100,7 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 }
             });
 
-            const connected = plugin.lens()(counter);
+            const connected = plugin.connect()(counter);
             const driver = mvu(identityDriver);
             const expr = render(driver, connected);
             expect(expr).toEqual([
@@ -128,7 +128,7 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 return [{ what: "Flawed" }];
             });
 
-            const connected = plugin.lens()(({ what }) => [
+            const connected = plugin.connect()(({ what }) => [
                 ["i", "Nothing"],
                 ["b", { onClick: ["anything"] }, what],
             ]);
@@ -150,6 +150,62 @@ describe("the Aydin Model View Update plugin for state management", () => {
             expect(render(driver, connected)).toEqual([
                 ["i", "Nothing"],
                 ["b", { onClick: ["anything"] }, "Flawed"],
+            ]);
+        });
+
+        it("should allow MVU messages to be routed to different parts of the state", () => {
+            const mvu = plugin((model, msg) => {
+                if (!model) {
+                    return [{ counterA: 0, counterB: 10 }];
+                }
+
+                switch (msg[0]) {
+                case "INC":
+                    if (msg[1] === "A") {
+                        return [{
+                            ...model,
+                            counterA: model.counterA + 1,
+                        }];
+                    } else {
+                        return [{
+                            ...model,
+                            counterB: model.counterB + 1,
+                        }];
+                    }
+                default:
+                    return [model];
+                }
+            });
+
+            const F = (which) =>
+                (count) => ["button", { onClick: ["INC", which] }, "+", `${count}`];
+
+            const A = plugin.connect(({ counterA }) => counterA)(F("A"));
+            const B = plugin.connect(({ counterB }) => counterB)(F("B"));
+
+            const driver = mvu(identityDriver);
+            const expr = render(driver, ["", A, B]);
+
+            expect(expr).toEqual([
+                "",
+                ["button", { onClick: ["INC", "A"] }, "+", "0"],
+                ["button", { onClick: ["INC", "B"] }, "+", "10"],
+            ]);
+
+            simulate("click", expr[1], driver);
+
+            expect(render(driver, ["", A, B])).toEqual([
+                "",
+                ["button", { onClick: ["INC", "A"] }, "+", "1"],
+                ["button", { onClick: ["INC", "B"] }, "+", "10"],
+            ]);
+
+            simulate("click", expr[2], driver);
+
+            expect(render(driver, ["", A, B])).toEqual([
+                "",
+                ["button", { onClick: ["INC", "A"] }, "+", "1"],
+                ["button", { onClick: ["INC", "B"] }, "+", "11"],
             ]);
         });
 
@@ -194,7 +250,7 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 }
             });
 
-            const fn = plugin.lens()(({ what }) => [
+            const fn = plugin.connect()(({ what }) => [
                 ["i", "Nothing"],
                 ["b", { onClick: ["anything"] }, what],
             ]);
