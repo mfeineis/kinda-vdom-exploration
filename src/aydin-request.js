@@ -7,6 +7,8 @@ const HTTP_BAD_REQUEST = 400;
 const ONE_HUNDRED = 100;
 const TEN_SECONDS = 10000;
 
+const EMPTY = 0;
+
 function noop() {}
 
 function configureRequest(maybeXhr, window) {
@@ -28,12 +30,18 @@ function configureRequest(maybeXhr, window) {
         const headers = options.headers || {};
         const method = (options.method || "GET").toUpperCase();
         const onProgress = options.onProgress || noop;
+        const params = options.params || {};
         const timeout = options.timeout || TEN_SECONDS;
         const withCredentials = !!options.withCredentials;
 
         try {
+            const q = Object.keys(params).map(function (key) {
+                return key + "=" + encodeURIComponent(params[key]);
+            }).join("&");
+            const query = url.indexOf("?") >= EMPTY ? "&" + q : "?" + q;
+
             const xhr = new XMLHttpRequest();
-            xhr.open(method, url, async);
+            xhr.open(method, q.length ? url + query : url, async);
 
             const abort = xhr.abort;
             let aborted = false;

@@ -289,6 +289,46 @@ describe("AydinRequest", () => {
         xhr.onreadystatechange();
     });
 
+    it("should support providing parameters via 'params'", () => {
+        let xhr = null;
+        const rq = configureRequest(createXhr((created) => xhr = created));
+
+        rq("http://example.org/endpoint", {
+            params: {
+                a: "b",
+                c: "some space",
+            },
+        });
+
+        expect(xhr.open.mock.calls).toEqual([
+            [
+                "GET",
+                "http://example.org/endpoint?a=b&c=some%20space",
+                true,
+            ],
+        ]);
+    });
+
+    it("should assemble URLs correctly with 'params'", () => {
+        let xhr = null;
+        const rq = configureRequest(createXhr((created) => xhr = created));
+
+        rq("http://example.org/endpoint?base=1", {
+            params: {
+                a: "b",
+                c: "some space",
+            },
+        });
+
+        expect(xhr.open.mock.calls).toEqual([
+            [
+                "GET",
+                "http://example.org/endpoint?base=1&a=b&c=some%20space",
+                true,
+            ],
+        ]);
+    });
+
     function createXhr(ping) {
         return function FakeXHR() {
             const xhr = {
