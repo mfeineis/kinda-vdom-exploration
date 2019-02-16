@@ -47,7 +47,7 @@
          baseUrl: "./dist",
      });
 
-     require(["aydin", "aydin-dom", "aydin-dom-server", "aydin-plugin-mvu", "aydin-request", "aydin-transform-markdown"], function (Aydin, AydinDom, AydinDomServer, AydinPluginMvu, request, markdown) {
+     require(["aydin", "aydin-dom", "aydin-dom-server", "aydin-plugin-mvu", "aydin-plugin-schedule", "aydin-request", "aydin-transform-markdown"], function (Aydin, AydinDom, AydinDomServer, AydinPluginMvu, AydinPluginSchedule, request, markdown) {
 
      request("http://example.org", null, function () {
          console.log('request', arguments);
@@ -142,6 +142,7 @@
      );
 
      {
+        const schedule = AydinPluginSchedule();
         const mvu = AydinPluginMvu(function (model, msg) {
             if (!model) {
                 return [{ count: 42, who: "World" }];
@@ -167,7 +168,7 @@
 
         const node = document.createElement("div");
 
-        Aydin.render(mvu(AydinDom(node)), tmpl);
+        Aydin.render(schedule(mvu(AydinDom(node))), tmpl);
 
         const pre = document.createElement("pre");
         pre.innerText = Aydin.render(mvu(AydinDomServer()), tmpl);

@@ -117,6 +117,13 @@ function isValidTagName(tagName) {
         !hasConsecutive;
 }
 
+/**
+ * @example
+ *     noop() // =>
+ *     noop("div") // =>
+ */
+function noop() {}
+
 /* eslint-disable immutable/no-mutation */
 exports.ELEMENT_NODE = ELEMENT_NODE;
 exports.TEXT_NODE = TEXT_NODE;
@@ -129,5 +136,6 @@ exports.isFunction = isFunction;
 exports.isObject = isObject;
 exports.isSpecialTag = isSpecialTag;
 exports.isString = isString;
+exports.noop = noop;
 /* eslint-enable immutable/no-mutation */
 

@@ -91,6 +91,7 @@ module.exports = {
                 "src/aydin-dom.js",
                 "src/aydin-dom-server.js",
                 "src/aydin-plugin-mvu.js",
+                "src/aydin-plugin-schedule.js",
                 "src/aydin-request.js",
                 "src/aydin-transform-markdown.js",
                 "src/signals.js",

@@ -70,6 +70,7 @@ function plugin(update) {
             return {
                 expand: expand,
                 isSpecialTag: decoratee.isSpecialTag,
+                receive: decoratee.receive,
                 reduce: decoratee.reduce,
                 visit: decoratee.visit,
             };

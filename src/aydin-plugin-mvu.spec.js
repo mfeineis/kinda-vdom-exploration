@@ -7,17 +7,7 @@ const {
     DOMDRIVER_MISSING_HANDLER,
     DOMDRIVER_HANDLER_RETURNED_DATA,
 } = require("./signals");
-const { identityDriver, simulate } = require("./testUtils.js");
-
-const configureSink = (upstreamSpy) => (next) => () => {
-    const decoratee = next(upstreamSpy);
-    return Object.freeze({
-        expand: decoratee.expand,
-        isSpecialTag: decoratee.isSpecialTag,
-        reduce: decoratee.reduce,
-        visit: decoratee.visit,
-    });
-};
+const { configureSink, identityDriver, simulate } = require("./testUtils.js");
 
 describe("the Aydin Model View Update plugin for state management", () => {
     const { render } = Aydin;

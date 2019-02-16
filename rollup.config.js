@@ -67,6 +67,20 @@ export default [
         ],
     },
     {
+        input: "src/aydin-plugin-schedule.js",
+        output: {
+            file: "dist/aydin-plugin-schedule.js",
+            format: "umd",
+            name: "AydinPluginSchedule",
+            sourcemap: true,
+        },
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            production && terser(terserOptions),
+        ],
+    },
+    {
         input: "src/aydin-request.js",
         output: {
             file: "dist/aydin-request.js",

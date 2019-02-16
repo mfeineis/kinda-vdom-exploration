@@ -1,5 +1,7 @@
 const signals = require("./signals");
 const CORE_RERENDER = signals.CORE_RERENDER;
+const CORE_RENDER_FRAME_DONE = signals.CORE_RENDER_FRAME_DONE;
+const CORE_RENDER_FRAME_INIT = signals.CORE_RENDER_FRAME_INIT;
 
 const utils = require("./utils");
 
@@ -12,6 +14,7 @@ const isArray = utils.isArray;
 const isFunction = utils.isFunction;
 const isObject = utils.isObject;
 const isString = utils.isString;
+const noop = utils.noop;
 
 const slice = [].slice;
 
@@ -207,7 +210,10 @@ function configureRenderer() {
 
         function rerender(signal) {
             if (signal === CORE_RERENDER) {
-                return traverse(composite, expr, [FIRST]);
+                (composite.receive || noop)(CORE_RENDER_FRAME_INIT);
+                const result = traverse(composite, expr, [FIRST]);
+                (composite.receive || noop)(CORE_RENDER_FRAME_DONE);
+                return result;
             }
         }
 

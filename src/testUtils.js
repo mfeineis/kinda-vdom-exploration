@@ -6,6 +6,21 @@ const TEXT_NODE = utils.TEXT_NODE;
 const isArray = utils.isArray;
 const isFunction = utils.isFunction;
 const isObject = utils.isObject;
+const noop = utils.noop;
+
+const configureSink = (upstreamSpy, forward = noop) => (next) => (notify) => {
+    const decoratee = next((...args) => {
+        upstreamSpy(...args);
+        forward(notify, args);
+    });
+    return Object.freeze({
+        expand: decoratee.expand,
+        isSpecialTag: decoratee.isSpecialTag,
+        receive: decoratee.receive,
+        reduce: decoratee.reduce,
+        visit: decoratee.visit,
+    });
+};
 
 const identityDriver = () => Object.freeze({
     visit: (expr, props, nodeType) => {
@@ -26,6 +41,7 @@ const tracable = (next, trace) => (notify) => {
     return Object.freeze({
         expand: decoratee.expand,
         isSpecialTag: decoratee.isSpecialTag,
+        receive: decoratee.receive,
         reduce: decoratee.reduce,
         visit: (expr, props, nodeType, path, bubble) => {
             switch (nodeType) {
@@ -246,6 +262,7 @@ function simulate(event, node, driver = identityDriver) {
 }
 
 /* eslint-disable immutable/no-mutation */
+exports.configureSink = configureSink;
 exports.html = html;
 exports.identityDriver = identityDriver;
 exports.makeRoot = makeRoot;
