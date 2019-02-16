@@ -1,6 +1,7 @@
 const Aydin = require("./aydin");
 const AydinDom = require("./aydin-dom");
 
+const { DOMDRIVER_HANDLER_RETURNED_DATA } = require("./signals");
 const {
     html,
     makeRoot,
@@ -205,6 +206,40 @@ describe("aydin-dom", () => {
 
                         expect(evts).toHaveLength(1);
                     }).not.toThrow();
+                });
+
+                it("should signal upstream when a handler returns data", () => {
+                    const root = makeRoot();
+                    const onClick = jest.fn(() => ["DATA", "from handler"]);
+                    const onMouseDown = jest.fn();
+                    const props = { onClick, onMouseDown };
+
+                    const configureSink = (upstreamSpy) => (next) => () => {
+                        const decoratee = next(upstreamSpy);
+                        return Object.freeze({
+                            expand: decoratee.expand,
+                            isSpecialTag: decoratee.isSpecialTag,
+                            reduce: decoratee.reduce,
+                            visit: decoratee.visit,
+                        });
+                    };
+                    const spy = jest.fn();
+                    const sink = configureSink(spy);
+
+                    Aydin.render(sink(driver(root)), ["button", props]);
+                    const button = root.childNodes[FIRST];
+
+                    const [ev] = simulate("click", button);
+                    expect(onClick.mock.calls[0][1]).toBe(ev);
+
+                    const [ev2] = simulate("mousedown", button);
+                    expect(onMouseDown.mock.calls[0][1]).toBe(ev2);
+
+                    expect(spy.mock.calls).toEqual([
+                        [DOMDRIVER_HANDLER_RETURNED_DATA, {
+                            data: ["DATA", "from handler"],
+                        }],
+                    ]);
                 });
 
             });

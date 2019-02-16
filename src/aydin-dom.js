@@ -7,6 +7,7 @@ const TEXT_NODE = utils.TEXT_NODE;
 
 const signals = require("./signals");
 const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
+const DOMDRIVER_HANDLER_RETURNED_DATA = signals.DOMDRIVER_HANDLER_RETURNED_DATA;
 
 const invariant = utils.invariant;
 const isFunction = utils.isFunction;
@@ -48,7 +49,12 @@ function driver(root) {
                         const evt = key.toLocaleLowerCase().replace(/^on/, "");
                         node.addEventListener(evt, function (ev) {
                             if (isFunction(value)) {
-                                value(props, ev);
+                                const data = value(props, ev);
+                                if (data) {
+                                    notify(DOMDRIVER_HANDLER_RETURNED_DATA, {
+                                        data: data,
+                                    });
+                                }
                                 return;
                             }
                             notify(DOMDRIVER_MISSING_HANDLER, {
