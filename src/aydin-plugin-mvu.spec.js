@@ -2,8 +2,22 @@ const pkg = require("../package.json");
 
 const Aydin = require("./aydin");
 const plugin = require("./aydin-plugin-mvu");
-const { CORE_RERENDER, DOMDRIVER_MISSING_HANDLER } = require("./signals");
+const {
+    CORE_RERENDER,
+    DOMDRIVER_MISSING_HANDLER,
+    DOMDRIVER_HANDLER_RETURNED_DATA,
+} = require("./signals");
 const { identityDriver, simulate } = require("./testUtils.js");
+
+const configureSink = (upstreamSpy) => (next) => () => {
+    const decoratee = next(upstreamSpy);
+    return Object.freeze({
+        expand: decoratee.expand,
+        isSpecialTag: decoratee.isSpecialTag,
+        reduce: decoratee.reduce,
+        visit: decoratee.visit,
+    });
+};
 
 describe("the Aydin Model View Update plugin for state management", () => {
     const { render } = Aydin;
@@ -250,16 +264,6 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 });
             };
 
-            const configureSink = (upstreamSpy) => (next) => () => {
-                const decoratee = next(upstreamSpy);
-                return Object.freeze({
-                    expand: decoratee.expand,
-                    isSpecialTag: decoratee.isSpecialTag,
-                    reduce: decoratee.reduce,
-                    visit: decoratee.visit,
-                });
-            };
-
             const spy = jest.fn();
             const sink = configureSink(spy);
 
@@ -324,6 +328,60 @@ describe("the Aydin Model View Update plugin for state management", () => {
             expect(dispatch([["PURE"]])).toBe(false);
             expect(dispatch([["MUTATE"]])).toBe(true);
             expect(dispatch([["PURE"]])).toBe(false);
+        });
+
+        it("should treat data returned from downstream handlers as messages", () => {
+            const fake = (next) => (notify) => {
+                const decoratee = next(notify);
+                // eslint-disable-next-line immutable/no-let
+                let i = 0;
+                return Object.freeze({
+                    expand: decoratee.expand,
+                    isSpecialTag: decoratee.isSpecialTag,
+                    reduce: decoratee.reduce,
+                    visit(expr, props, nodeType, path) {
+                        if (i === 0) {
+                            notify(DOMDRIVER_HANDLER_RETURNED_DATA, {
+                                data: ["FAKE", "with", "params"],
+                            });
+                            i += 1;
+                        } else {
+                            notify(DOMDRIVER_HANDLER_RETURNED_DATA, {
+                                data: [],
+                            });
+                        }
+                        return decoratee.visit(expr, props, nodeType, path);
+                    },
+                });
+            };
+
+            const mvu = plugin((model, msg) => {
+                if (!model) {
+                    return [{ what: "Bold" }];
+                }
+                switch (msg[0]) {
+                case "FAKE":
+                    return [{ what: "Fake" }];
+                default:
+                    return [model];
+                }
+            });
+            const fn = plugin.connect()(({ what }) => [
+                ["button", { onClick }, "Click ", what, "!"]
+            ]);
+
+            const sink = configureSink(() => {});
+            const driver = sink(mvu(fake(identityDriver)));
+            const onClick = jest.fn(() => ["FAKE"]);
+
+            const expr = render(driver, fn);
+            expect(expr).toEqual([
+                ["button", { onClick }, "Click ", "Bold", "!"]
+            ]);
+
+            expect(render(driver, fn)).toEqual([
+                ["button", { onClick }, "Click ", "Fake", "!"]
+            ]);
         });
 
     });

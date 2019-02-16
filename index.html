@@ -142,19 +142,22 @@
      );
 
      {
-        const mvu = AydinPluginMvu(function (model) {
+        const mvu = AydinPluginMvu(function (model, msg) {
             if (!model) {
                 return [{ count: 42, who: "World" }];
             }
             return [{
-                count: model.count + 1,
+                count: model.count + msg[1],
                 who: model.who,
             }];
         });
         const counter = AydinPluginMvu.connect(function (state) {
             return state.count;
         })(function (count) {
-            return ["button", { onClick: ["INC", 1] }, "+", "(" + count + ")"];
+            return ["button", {
+                onClick: ["INC", 1],
+                onMouseDown: () => ["INC", -2]
+            }, "+", "(" + count + ")"];
         });
         const tmpl = AydinPluginMvu.connect(function (state) {
             return state.who;

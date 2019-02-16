@@ -1,11 +1,11 @@
 const signals = require("./signals");
 const CORE_RERENDER = signals.CORE_RERENDER;
+const DOMDRIVER_HANDLER_RETURNED_DATA = signals.DOMDRIVER_HANDLER_RETURNED_DATA;
 const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
 
 const GET_EXPANDO = "__aydin_plugin_mvu_get";
 
 const FIRST = 0;
-const NONE = 0;
 
 function identity(it) {
     return it;
@@ -21,10 +21,6 @@ function plugin(update) {
     let model = init[FIRST];
 
     function dispatch(msgs) {
-        if (msgs.length === NONE) {
-            return false;
-        }
-
         // eslint-disable-next-line immutable/no-let
         let newModel = model;
 
@@ -43,16 +39,23 @@ function plugin(update) {
         function mvu(notify) {
 
             function intercept(evt, data) {
-                if (evt === DOMDRIVER_MISSING_HANDLER) {
-                    const msgs = [data.value];
-                    if (dispatch(msgs)) {
+                switch (evt) {
+                case DOMDRIVER_HANDLER_RETURNED_DATA:
+                    if (dispatch([data.data])) {
                         notify(CORE_RERENDER);
                         return;
                     }
                     return;
+                case DOMDRIVER_MISSING_HANDLER:
+                    if (dispatch([data.value])) {
+                        notify(CORE_RERENDER);
+                        return;
+                    }
+                    return;
+                default:
+                    notify(evt, data);
+                    return;
                 }
-
-                notify(evt, data);
             }
 
             const decoratee = next(intercept);
