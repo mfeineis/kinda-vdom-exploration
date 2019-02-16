@@ -28,6 +28,7 @@ module.exports = {
             "unix"
         ],
         "max-len": 2,
+        "no-fallthrough": 2,
         "no-inline-comments": 2,
         "no-magic-numbers": 2,
         "no-param-reassign": 2,
