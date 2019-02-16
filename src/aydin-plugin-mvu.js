@@ -21,6 +21,10 @@ function plugin(update) {
     let model = init[FIRST];
 
     function dispatch(msgs) {
+        if (msgs.length === NONE) {
+            return false;
+        }
+
         // eslint-disable-next-line immutable/no-let
         let newModel = model;
 
@@ -29,7 +33,7 @@ function plugin(update) {
             newModel = result[FIRST];
         });
 
-        const hasChanges = msgs.length > NONE && newModel !== model;
+        const hasChanges = newModel !== model;
         model = newModel;
         return hasChanges;
     }

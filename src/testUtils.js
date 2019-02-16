@@ -21,16 +21,6 @@ const identityDriver = () => Object.freeze({
     },
 });
 
-const nonReactive = (next) => () => {
-    const decoratee = next(() => {});
-    return Object.freeze({
-        expand: decoratee.expand,
-        isSpecialTag: decoratee.isSpecialTag,
-        reduce: decoratee.reduce,
-        visit: decoratee.visit,
-    });
-};
-
 const tracable = (next, trace) => (notify) => {
     const decoratee = next(notify);
     return Object.freeze({
@@ -259,7 +249,6 @@ function simulate(event, node, driver = identityDriver) {
 exports.html = html;
 exports.identityDriver = identityDriver;
 exports.makeRoot = makeRoot;
-exports.nonReactive = nonReactive;
 exports.range = range;
 exports.serialize = serialize;
 exports.simulate = simulate;

@@ -2,8 +2,8 @@ const pkg = require("../package.json");
 
 const Aydin = require("./aydin");
 const plugin = require("./aydin-plugin-mvu");
-const { DOMDRIVER_MISSING_HANDLER } = require("./signals");
-const { identityDriver, nonReactive, simulate } = require("./testUtils.js");
+const { CORE_RERENDER, DOMDRIVER_MISSING_HANDLER } = require("./signals");
+const { identityDriver, simulate } = require("./testUtils.js");
 
 describe("the Aydin Model View Update plugin for state management", () => {
     const { render } = Aydin;
@@ -33,6 +33,19 @@ describe("the Aydin Model View Update plugin for state management", () => {
         it("should allow a template to assign 'null' to a handler", () => {
             const result = counter({ count: -1 });
             expect(result[0][1].onClick).toEqual(null);
+        });
+
+        it("should support selecting parts of the state via 'connect'", () => {
+            const select = () => {};
+            const fn = plugin.connect(select)(() => []);
+            expect(fn["__aydin_plugin_mvu_get"]).toBe(select);
+        });
+
+        it("should just hand in the complete state when omitting the selector", () => {
+            const sentinel = Object.freeze({});
+            const fn = plugin.connect()(() => []);
+            expect(typeof fn["__aydin_plugin_mvu_get"]).toBe("function");
+            expect(fn["__aydin_plugin_mvu_get"](sentinel)).toBe(sentinel);
         });
 
         it("should take over state management for enhanced templates when the render is driven by the MVU plugin", () => {
@@ -237,6 +250,19 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 });
             };
 
+            const configureSink = (upstreamSpy) => (next) => () => {
+                const decoratee = next(upstreamSpy);
+                return Object.freeze({
+                    expand: decoratee.expand,
+                    isSpecialTag: decoratee.isSpecialTag,
+                    reduce: decoratee.reduce,
+                    visit: decoratee.visit,
+                });
+            };
+
+            const spy = jest.fn();
+            const sink = configureSink(spy);
+
             const mvu = plugin((model, msg) => {
                 if (!model) {
                     return [{ what: "Bold!" }];
@@ -254,13 +280,19 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 ["i", "Nothing"],
                 ["b", { onClick: ["anything"] }, what],
             ]);
-            const driver = nonReactive(mvu(bubbling(identityDriver)));
+            const driver = sink(mvu(bubbling(identityDriver)));
             const expr = render(driver, fn);
             expect(expr).toEqual([
                 ["i", "Nothing"],
                 ["b", { onClick: ["anything"] }, "Bold!"],
             ]);
 
+            expect(spy.mock.calls).toEqual([
+                [CORE_RERENDER],
+                [undefined, undefined],
+                [undefined, undefined],
+            ]);
+
             simulate("click", expr[1], driver);
             expect(render(driver, fn)).toEqual([
                 ["i", "Nothing"],
@@ -272,6 +304,26 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 ["i", "Nothing"],
                 ["b", { onClick: ["anything"] }, "Flawed"],
             ]);
+        });
+
+        it("should not request a re-render if the model has not changed", () => {
+            const mvu = plugin((model, msg) => {
+                if (!model) {
+                    return [{ what: "Bold!" }];
+                }
+                if (msg[0] === "MUTATE") {
+                    return [{ what: model.what }];
+                }
+                return [model];
+            });
+
+            const driver = mvu(identityDriver);
+            const { dispatch } = driver;
+
+            expect(dispatch([])).toBe(false);
+            expect(dispatch([["PURE"]])).toBe(false);
+            expect(dispatch([["MUTATE"]])).toBe(true);
+            expect(dispatch([["PURE"]])).toBe(false);
         });
 
     });
