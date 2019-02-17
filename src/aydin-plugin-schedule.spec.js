@@ -21,6 +21,12 @@ describe("the Aydin schedule plugin", () => {
         expect(plugin.version).toBe(pkg.version);
     });
 
+    it("should use the 'windowed' scheduler by default", () => {
+        const schedule = plugin();
+
+        expect(schedule.scheduler).toBe(plugin.windowed);
+    });
+
     const constantlyChatty = (next) => (notify) => {
         const decoratee = next(notify);
         return Object.freeze({
@@ -76,7 +82,7 @@ describe("the Aydin schedule plugin", () => {
     });
 
     describe("batching 'CORE_RERENDER' signals", () => {
-        const schedule = plugin();
+        const schedule = plugin(plugin.sync);
 
         it("should not notify if no re-render signals were dispatched", () => {
             const spy = jest.fn();
@@ -192,6 +198,162 @@ describe("the Aydin schedule plugin", () => {
                 [CORE_RERENDER],
                 [CORE_RERENDER],
             ]);
+        });
+
+    });
+
+    describe("the 'sync' scheduler", () => {
+
+        it("should be exported", () => {
+            expect(typeof plugin.sync).toBe("function");
+            expect(plugin.sync).toHaveLength(1);
+        });
+
+        const sync = plugin.sync;
+
+        it("should invoke the step function immediately without data", () => {
+            const fn = jest.fn();
+            const schedule = sync(fn);
+            schedule("aang");
+            expect(fn.mock.calls).toEqual([
+                ["aang"],
+            ]);
+        });
+
+        it("should invoke the step function immediately with data", () => {
+            const fn = jest.fn();
+            const schedule = sync(fn);
+            schedule("aang", { team: "Avatar" });
+            expect(fn.mock.calls).toEqual([
+                ["aang", { team: "Avatar" }],
+            ]);
+        });
+
+    });
+
+    describe("the 'windowed' scheduler", () => {
+
+        it("should be exported", () => {
+            expect(typeof plugin.configureWindowed).toBe("function");
+            expect(plugin.configureWindowed).toHaveLength(2);
+            expect(typeof plugin.windowed).toBe("function");
+            expect(plugin.windowed).toHaveLength(1);
+        });
+
+        describe("a windowed scheduler batching signals for one event loop run", () => {
+            const maxCalls = (max, fn) => {
+                // eslint-disable-next-line immutable/no-let
+                let i = 0;
+                return (...args) => {
+                    i += 1;
+                    if (i <= max) {
+                        fn(...args);
+                    }
+                };
+            };
+            const requestAnimationFrame = (fn, ms = 10) =>
+                setTimeout(() => fn(Date.now()), ms);
+
+            const window = {
+                requestAnimationFrame: jest.fn(maxCalls(100, requestAnimationFrame)),
+            };
+            const scheduler = plugin.configureWindowed(10, window);
+
+            it("should invoke the step function on the next time slice without data", (done) => {
+                const fn = jest.fn();
+                const schedule = scheduler(fn);
+                schedule("aang");
+
+                expect(fn.mock.calls).toEqual([]);
+
+                window.requestAnimationFrame(() => {
+                    expect(fn.mock.calls).toEqual([
+                        ["aang"],
+                    ]);
+                    done();
+                }, 100);
+            });
+
+            it("should merge synchronously scheduled signals on the next time slice", (done) => {
+                const fn = jest.fn();
+                const schedule = scheduler(fn);
+                schedule("aang");
+
+                window.requestAnimationFrame(() => {
+                    schedule("soka");
+                });
+
+                expect(fn.mock.calls).toEqual([]);
+
+                window.requestAnimationFrame(() => {
+                    expect(fn.mock.calls).toEqual([
+                        ["aang"],
+                        ["katara"],
+                        ["soka"],
+                    ]);
+                    done();
+                }, 50);
+
+                schedule("katara");
+            });
+
+            it("should linearize the scheduled schedules into the same time slice", (done) => {
+                const fn = jest.fn();
+                const schedule = scheduler(fn);
+                schedule("aang");
+                schedule("katara");
+
+                expect(fn.mock.calls).toEqual([]);
+                expect(window.requestAnimationFrame.mock.calls).toHaveLength(1);
+
+                window.requestAnimationFrame(() => {
+                    expect(fn.mock.calls).toEqual([
+                        ["aang"],
+                        ["katara"],
+                    ]);
+                    done();
+                }, 50);
+            });
+
+            it("should invoke the step function on the next time slice with data", (done) => {
+                const fn = jest.fn();
+                const data = { team: "Avatar" };
+                const schedule = scheduler(fn);
+                schedule("aang", data);
+
+                expect(fn.mock.calls).toEqual([]);
+
+                window.requestAnimationFrame(() => {
+                    expect(fn.mock.calls).toEqual([
+                    ]);
+                }, 5);
+
+                window.requestAnimationFrame(() => {
+                    expect(fn.mock.calls).toEqual([
+                        ["aang", data],
+                    ]);
+                    done();
+                }, 50);
+            });
+
+            it("should de-duplicate re-render signals in the time slice buffer", (done) => {
+                const fn = jest.fn();
+                const schedule = scheduler(fn);
+                schedule(CORE_RERENDER);
+                schedule("katara");
+                schedule(CORE_RERENDER);
+
+                expect(fn.mock.calls).toEqual([]);
+
+                window.requestAnimationFrame(() => {
+                    expect(fn.mock.calls).toEqual([
+                        ["katara"],
+                        [CORE_RERENDER],
+                    ]);
+                    done();
+                }, 50);
+            });
+
         });
 
     });
