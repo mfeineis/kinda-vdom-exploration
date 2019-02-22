@@ -128,19 +128,21 @@ function makeRoot() {
                 return ` ${key}='${JSON.stringify(value)}'`;
             }).join("");
 
-            if (voidElementLookup[self.nodeName]) {
-                return `<${self.nodeName}${attrs}/>`;
+            if (voidElementLookup[self.nodeName.toLowerCase()]) {
+                return `<${self.nodeName.toLowerCase()}${attrs}/>`;
             }
 
             return [
-                `<${self.nodeName}${attrs}>`,
+                `<${self.nodeName.toLowerCase()}${attrs}>`,
                 children,
-                `</${self.nodeName}>`,
+                `</${self.nodeName.toLowerCase()}>`,
             ].join("");
         }
 
         return children;
     };
+
+    const shuffleNodeNameCase = (nodeName) => nodeName.toUpperCase();
 
     const ownerDocument = Object.freeze({
         createElement: (nodeName) => {
@@ -182,9 +184,9 @@ function makeRoot() {
                 get dataset() {
                     return nodeState.dataset;
                 },
-                nodeName,
-                nodeType: ELEMENT_NODE,
-                ownerDocument,
+                get nodeName() { return shuffleNodeNameCase(nodeName); },
+                get nodeType() { return ELEMENT_NODE; },
+                get ownerDocument() { return ownerDocument; },
             });
             return new Proxy(node, {
                 set(_, key, value) {
@@ -194,11 +196,10 @@ function makeRoot() {
             });
         },
         createTextNode: (textContent) => {
-            const node = Object.freeze({
-                nodeType: TEXT_NODE,
-                ownerDocument,
+            const node = {
+                get nodeType() { return TEXT_NODE; },
                 textContent,
-            });
+            };
             return node;
         },
     });

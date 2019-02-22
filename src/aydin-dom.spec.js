@@ -1,8 +1,12 @@
 const Aydin = require("./aydin");
 const AydinDom = require("./aydin-dom");
 
-const { DOMDRIVER_HANDLER_RETURNED_DATA } = require("./signals");
 const {
+    CORE_RERENDER,
+    DOMDRIVER_HANDLER_RETURNED_DATA,
+} = require("./signals");
+const {
+    configureSink,
     html,
     makeRoot,
     serialize,
@@ -64,7 +68,7 @@ describe("aydin-dom", () => {
                     createElement: jest.fn(() => ({
                         appendChild: jest.fn(),
                     })),
-                    createTextNode: jest.fn(),
+                    createTextNode: jest.fn(() => ({})),
                 },
             };
 
@@ -214,15 +218,6 @@ describe("aydin-dom", () => {
                     const onMouseDown = jest.fn();
                     const props = { onClick, onMouseDown };
 
-                    const configureSink = (upstreamSpy) => (next) => () => {
-                        const decoratee = next(upstreamSpy);
-                        return Object.freeze({
-                            expand: decoratee.expand,
-                            isSpecialTag: decoratee.isSpecialTag,
-                            reduce: decoratee.reduce,
-                            visit: decoratee.visit,
-                        });
-                    };
                     const spy = jest.fn();
                     const sink = configureSink(spy);
 
@@ -242,6 +237,217 @@ describe("aydin-dom", () => {
                     ]);
                 });
 
+            });
+
+        });
+
+        describe("subsequent renders of the same expression", () => {
+
+            describe("without interference of the DOM from the outside", () => {
+
+                it("should leave a simple text expression alone", () => {
+                    const root = makeRoot();
+                    const drive = driver(root);
+                    const expr = "Hello, World!";
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(1);
+                    const textNode = root.childNodes[0];
+                    expect(serialize(root)).toEqual(html([
+                        "Hello, World!",
+                    ]));
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(1);
+                    expect(textNode)
+                        .toBe(root.childNodes[root.childNodes.length - 1]);
+
+                    expect(serialize(root)).toEqual(html([
+                        "Hello, World!",
+                    ]));
+                });
+
+                it("should leave a single expression alone", () => {
+                    const root = makeRoot();
+                    const drive = driver(root);
+                    const expr = ["i", "Hello, ", "World!"];
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(1);
+                    expect(root.childNodes[0].childNodes).toHaveLength(2);
+                    const hello = root.childNodes[0].childNodes[0];
+                    const world = root.childNodes[0].childNodes[1];
+                    expect(serialize(root)).toEqual(html([
+                        "<i>Hello, World!</i>",
+                    ]));
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(1);
+                    expect(root.childNodes[0].childNodes).toHaveLength(2);
+                    expect(hello)
+                        .toBe(root.childNodes[0].childNodes[root.childNodes[0].childNodes.length - 2]);
+                    expect(world)
+                        .toBe(root.childNodes[0].childNodes[root.childNodes[0].childNodes.length - 1]);
+
+                    expect(serialize(root)).toEqual(html([
+                        "<i>Hello, World!</i>",
+                    ]));
+                });
+
+                it("should leave a flat collection of expressions alone", () => {
+                    const root = makeRoot();
+                    const drive = driver(root);
+                    const expr = ["", "Hello, ", "World", ["i", "!"]];
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(4);
+                    expect(root.childNodes[0].textContent).toBe("");
+                    const hello = root.childNodes[1];
+                    const world = root.childNodes[2];
+                    const stuff = root.childNodes[3];
+                    expect(hello.textContent).toBe("Hello, ");
+                    expect(world.textContent).toBe("World");
+                    expect(stuff.childNodes).toHaveLength(1);
+                    expect(serialize(root)).toEqual(html([
+                        "Hello, World<i>!</i>",
+                    ]));
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(4);
+                    expect(hello).toBe(root.childNodes[1]);
+                    expect(world).toBe(root.childNodes[2]);
+                    expect(stuff).toBe(root.childNodes[3]);
+                    expect(stuff.childNodes).toHaveLength(1);
+
+                    expect(serialize(root)).toEqual(html([
+                        "Hello, World<i>!</i>",
+                    ]));
+                });
+
+                it("should leave a tree of expressions alone", () => {
+                    const root = makeRoot();
+                    const drive = driver(root);
+                    const expr = ["div", "One", ["ul", ["li", "Two"]]];
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(1);
+                    expect(root.childNodes[0].childNodes).toHaveLength(2);
+                    const one = root.childNodes[0].childNodes[0];
+                    const ul = root.childNodes[0].childNodes[1];
+                    const li = ul.childNodes[0];
+                    const two = li.childNodes[0];
+                    expect(one.textContent).toBe("One");
+                    expect(two.textContent).toBe("Two");
+                    expect(ul.childNodes).toHaveLength(1);
+                    expect(li.childNodes).toHaveLength(1);
+                    expect(serialize(root)).toEqual(html([
+                        "<div>",
+                        "  One",
+                        "  <ul>",
+                        "    <li>Two</li>",
+                        "  </ul>",
+                        "</div>",
+                    ]));
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(1);
+                    expect(root.childNodes[0].childNodes).toHaveLength(2);
+                    expect(one).toBe(root.childNodes[0].childNodes[0]);
+                    expect(ul).toBe(root.childNodes[0].childNodes[1]);
+                    expect(ul.childNodes).toHaveLength(1);
+                    expect(li).toBe(ul.childNodes[0]);
+                    expect(li.childNodes).toHaveLength(1);
+                    expect(two).toBe(li.childNodes[0]);
+
+                    expect(serialize(root)).toEqual(html([
+                        "<div>",
+                        "  One",
+                        "  <ul>",
+                        "    <li>Two</li>",
+                        "  </ul>",
+                        "</div>",
+                    ]));
+                });
+
+                it("should leave a forest of expressions alone", () => {
+                    const root = makeRoot();
+                    const drive = driver(root);
+                    const expr = [
+                        ["b", "One"],
+                        "Two",
+                        ["i", "Three", "Four"],
+                    ];
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(3);
+                    const one = root.childNodes[0].childNodes[0];
+                    const two = root.childNodes[1];
+                    const three = root.childNodes[2].childNodes[0];
+                    const four = root.childNodes[2].childNodes[1];
+                    expect(one.textContent).toBe("One");
+                    expect(two.textContent).toBe("Two");
+                    expect(three.textContent).toBe("Three");
+                    expect(four.textContent).toBe("Four");
+                    expect(root.childNodes[0].childNodes).toHaveLength(1);
+                    expect(root.childNodes[2].childNodes).toHaveLength(2);
+                    expect(serialize(root)).toEqual(html([
+                        "<b>One</b>",
+                        "Two",
+                        "<i>ThreeFour</i>",
+                    ]));
+
+                    Aydin.render(drive, expr);
+                    expect(root.childNodes).toHaveLength(3);
+                    expect(one).toBe(root.childNodes[0].childNodes[0]);
+                    expect(two).toBe(root.childNodes[1]);
+                    expect(three).toBe(root.childNodes[2].childNodes[0]);
+                    expect(four).toBe(root.childNodes[2].childNodes[1]);
+                    expect(root.childNodes[0].childNodes).toHaveLength(1);
+                    expect(root.childNodes[2].childNodes).toHaveLength(2);
+
+                    expect(serialize(root)).toEqual(html([
+                        "<b>One</b>",
+                        "Two",
+                        "<i>ThreeFour</i>",
+                    ]));
+                });
+
+            });
+
+        });
+
+        describe("mutating existing expressions", () => {
+
+            it("should mutate a simple text node", () => {
+                const root = makeRoot();
+                const drive = driver(root);
+                const expr = "Hello, World!";
+
+                Aydin.render(drive, expr);
+                expect(serialize(root)).toEqual(html([
+                    "Hello, World!",
+                ]));
+
+                Aydin.render(drive, "Hello, Universe!");
+                expect(serialize(root)).toEqual(html([
+                    "Hello, Universe!",
+                ]));
+            });
+
+            it("should mutate a simple expression", () => {
+                const root = makeRoot();
+                const drive = driver(root);
+                const expr = ["b", "Hello, World!"];
+
+                Aydin.render(drive, expr);
+                expect(serialize(root)).toEqual(html([
+                    "<b>Hello, World!</b>",
+                ]));
+
+                Aydin.render(drive, ["b", "Hello, Universe!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b>Hello, Universe!</b>",
+                ]));
             });
 
         });

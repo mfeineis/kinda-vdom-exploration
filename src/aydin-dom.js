@@ -9,6 +9,7 @@ const signals = require("./signals");
 const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
 const DOMDRIVER_HANDLER_RETURNED_DATA = signals.DOMDRIVER_HANDLER_RETURNED_DATA;
 
+const dropLast = utils.dropLast;
 const invariant = utils.invariant;
 const isFunction = utils.isFunction;
 const isSpecialTag = utils.isSpecialTag;
@@ -26,9 +27,29 @@ function driver(root) {
 
     return function dom(notify) {
 
-        function reduce(children) {
-            children.forEach(function (child) {
-                root.appendChild(child);
+        function find(parent, path) {
+            /* eslint-disable immutable/no-let, no-magic-numbers */
+            //console.log("find", parent, path);
+            let node = parent;
+            let i = 0;
+
+            while (node && node.childNodes && i < path.length) {
+                node = node.childNodes[path[i]];
+                i += 1;
+            }
+
+            return node;
+            /* eslint-enable immutable/no-let, no-magic-numbers */
+        }
+
+        function reduce(children, path) {
+            const parent = find(root, dropLast(path));
+
+            children.forEach(function (child, i) {
+                const existing = find(parent, [i]);
+                if (!existing) {
+                    parent.appendChild(child);
+                }
             });
         }
 
@@ -40,6 +61,13 @@ function driver(root) {
 
             switch (nodeType) {
             case ELEMENT_NODE: {
+                const existing = find(root, path);
+                if (existing && existing.nodeType === ELEMENT_NODE) {
+                    return function () {
+                        return existing;
+                    };
+                }
+
                 const node = document.createElement(tag);
 
                 Object.keys(props).forEach(function (key) {
@@ -97,6 +125,18 @@ function driver(root) {
                 };
             }
             case TEXT_NODE: {
+                const existing = find(root, path);
+                //console.log("TEXT_NODE", "existing", existing);
+                if (existing && existing.nodeType === TEXT_NODE) {
+                    if (existing.textContent === tag) {
+                        return existing;
+                    } else {
+                        // eslint-disable-next-line immutable/no-mutation
+                        existing.textContent = tag;
+                        return existing;
+                    }
+                }
+
                 const node = document.createTextNode(tag);
                 if (path.length === TOPLEVEL) {
                     root.appendChild(node);

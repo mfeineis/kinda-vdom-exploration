@@ -9,6 +9,7 @@ const DOCUMENT_TYPE_NODE = utils.DOCUMENT_TYPE_NODE;
 const ELEMENT_NODE = utils.ELEMENT_NODE;
 const TEXT_NODE = utils.TEXT_NODE;
 
+const dropLast = utils.dropLast;
 const invariant = utils.invariant;
 const isArray = utils.isArray;
 const isFunction = utils.isFunction;
@@ -143,15 +144,18 @@ function configureRenderer() {
             return (driver.reduce || identity)(
                 expr.map(function (it, i) {
                     return traverse(driver, it, path.concat([i]));
-                })
+                }),
+                path
             );
         }
 
         if (expr[FIRST] === "") {
+            //console.log("core.reduce", expr, path);
             return (driver.reduce || identity)(
                 expr.map(function (it, i) {
-                    return traverse(driver, it, path.concat([i]));
-                })
+                    return traverse(driver, it, dropLast(path).concat([i]));
+                }),
+                dropLast(path)
             );
         }
 
@@ -187,6 +191,7 @@ function configureRenderer() {
         const finalize = driver.visit(tag, props, ELEMENT_NODE, path);
 
         if (isFunction(finalize)) {
+            //console.log("core.finalize()", path, children);
             return finalize(children.map(function (it, i) {
                 return traverse(driver, it, path.concat([i]));
             }));
