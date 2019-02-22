@@ -43,7 +43,7 @@ const tracable = (next, trace) => (notify) => {
         isSpecialTag: decoratee.isSpecialTag,
         receive: decoratee.receive,
         reduce: decoratee.reduce,
-        visit: (expr, props, nodeType, path, bubble) => {
+        visit: (expr, props, nodeType, path) => {
             switch (nodeType) {
             case 1:
                 trace.push(
@@ -56,7 +56,7 @@ const tracable = (next, trace) => (notify) => {
                 );
                 break;
             }
-            return decoratee.visit(expr, props, nodeType, path, bubble);
+            return decoratee.visit(expr, props, nodeType, path);
         },
     });
 };
