@@ -2,7 +2,6 @@ const Aydin = require("./aydin");
 const AydinDom = require("./aydin-dom");
 
 const {
-    CORE_RERENDER,
     DOMDRIVER_HANDLER_RETURNED_DATA,
 } = require("./signals");
 const {

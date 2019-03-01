@@ -3,7 +3,7 @@ const pkg = require("../package.json");
 const Aydin = require("./aydin");
 const plugin = require("./aydin-plugin-mvu");
 const {
-    CORE_RERENDER,
+    CORE_RENDER,
     DOMDRIVER_MISSING_HANDLER,
     DOMDRIVER_HANDLER_RETURNED_DATA,
 } = require("./signals");
@@ -282,7 +282,7 @@ describe("the Aydin Model View Update plugin for state management", () => {
             ]);
 
             expect(spy.mock.calls).toEqual([
-                [CORE_RERENDER],
+                [CORE_RENDER],
                 [undefined, undefined],
                 [undefined, undefined],
             ]);

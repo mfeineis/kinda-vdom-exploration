@@ -1,5 +1,5 @@
 const signals = require("./signals");
-const CORE_RERENDER = signals.CORE_RERENDER;
+const CORE_RENDER = signals.CORE_RENDER;
 const DOMDRIVER_HANDLER_RETURNED_DATA = signals.DOMDRIVER_HANDLER_RETURNED_DATA;
 const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
 
@@ -42,13 +42,13 @@ function plugin(update) {
                 switch (evt) {
                 case DOMDRIVER_HANDLER_RETURNED_DATA:
                     if (dispatch([data.data])) {
-                        notify(CORE_RERENDER);
+                        notify(CORE_RENDER);
                         return;
                     }
                     return;
                 case DOMDRIVER_MISSING_HANDLER:
                     if (dispatch([data.value])) {
-                        notify(CORE_RERENDER);
+                        notify(CORE_RENDER);
                         return;
                     }
                     return;

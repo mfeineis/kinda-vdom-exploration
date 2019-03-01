@@ -1,5 +1,5 @@
 const signals = require("./signals");
-const CORE_RERENDER = signals.CORE_RERENDER;
+const CORE_RENDER = signals.CORE_RENDER;
 const CORE_RENDER_FRAME_DONE = signals.CORE_RENDER_FRAME_DONE;
 const CORE_RENDER_FRAME_INIT = signals.CORE_RENDER_FRAME_INIT;
 
@@ -214,7 +214,7 @@ function configureRenderer() {
         const composite = driver(rerender);
 
         function rerender(signal) {
-            if (signal === CORE_RERENDER) {
+            if (signal === CORE_RENDER) {
                 (composite.receive || noop)(CORE_RENDER_FRAME_INIT);
                 const result = traverse(composite, expr, [FIRST]);
                 (composite.receive || noop)(CORE_RENDER_FRAME_DONE);
@@ -222,7 +222,7 @@ function configureRenderer() {
             }
         }
 
-        return rerender(CORE_RERENDER);
+        return rerender(CORE_RENDER);
     }
 
     return render;

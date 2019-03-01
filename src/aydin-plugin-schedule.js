@@ -1,5 +1,5 @@
 const signals = require("./signals");
-const CORE_RERENDER = signals.CORE_RERENDER;
+const CORE_RENDER = signals.CORE_RENDER;
 const CORE_RENDER_FRAME_DONE = signals.CORE_RENDER_FRAME_DONE;
 const CORE_RENDER_FRAME_INIT = signals.CORE_RENDER_FRAME_INIT;
 
@@ -49,7 +49,7 @@ function configureWindowed(frameSizeMs, window) {
                 const evt = it[FIRST];
                 const data = it[SECOND];
 
-                if (evt === CORE_RERENDER) {
+                if (evt === CORE_RENDER) {
                     shouldRender = true;
                     return;
                 }
@@ -64,7 +64,7 @@ function configureWindowed(frameSizeMs, window) {
             buffer = [];
 
             if (shouldRender) {
-                notify(CORE_RERENDER);
+                notify(CORE_RENDER);
             }
 
             schedule(dispatch);
@@ -95,7 +95,7 @@ function plugin(maybeScheduler) {
             const queue = scheduler(notify);
 
             function intercept(evt, data) {
-                if (evt === CORE_RERENDER) {
+                if (evt === CORE_RENDER) {
                     if (batching) {
                         count += ONE;
                     } else {
@@ -122,7 +122,7 @@ function plugin(maybeScheduler) {
 
                 const downstreamResult = (decoratee.receive || noop)(evt);
                 if (shouldRerender) {
-                    queue(CORE_RERENDER);
+                    queue(CORE_RENDER);
                 }
                 return downstreamResult;
             }

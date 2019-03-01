@@ -3,7 +3,7 @@ const pkg = require("../package.json");
 const Aydin = require("./aydin");
 const plugin = require("./aydin-plugin-schedule");
 const {
-    CORE_RERENDER,
+    CORE_RENDER,
     CORE_RENDER_FRAME_DONE,
     CORE_RENDER_FRAME_INIT,
 } = require("./signals");
@@ -35,9 +35,9 @@ describe("the Aydin schedule plugin", () => {
             receive: decoratee.receive,
             reduce: decoratee.reduce,
             visit: (expr, props, nodeType, path) => {
-                notify(CORE_RERENDER);
-                notify(CORE_RERENDER);
-                notify(CORE_RERENDER);
+                notify(CORE_RENDER);
+                notify(CORE_RENDER);
+                notify(CORE_RENDER);
                 return decoratee.visit(expr, props, nodeType, path);
             },
         });
@@ -52,7 +52,7 @@ describe("the Aydin schedule plugin", () => {
             reduce: decoratee.reduce,
             visit: (expr, props, nodeType, path) => {
                 range(Math.random() * 2).forEach(() => {
-                    notify(CORE_RERENDER);
+                    notify(CORE_RENDER);
                 });
 
                 return decoratee.visit(expr, props, nodeType, path);
@@ -70,18 +70,18 @@ describe("the Aydin schedule plugin", () => {
             render(driver, ["i", "Chatty, chatty"]);
 
             expect(spy.mock.calls).toEqual([
-                [CORE_RERENDER],
-                [CORE_RERENDER],
-                [CORE_RERENDER],
-                [CORE_RERENDER],
-                [CORE_RERENDER],
-                [CORE_RERENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
             ]);
         });
 
     });
 
-    describe("batching 'CORE_RERENDER' signals", () => {
+    describe("batching 'CORE_RENDER' signals", () => {
         const schedule = plugin(plugin.sync);
 
         it("should not notify if no re-render signals were dispatched", () => {
@@ -101,11 +101,11 @@ describe("the Aydin schedule plugin", () => {
 
             render(driver, ["i", "Chatty, chatty"]);
             expect(spy.mock.calls).toEqual([
-                [CORE_RERENDER],
+                [CORE_RENDER],
             ]);
         });
 
-        it("should exlusively track 'CORE_RERENDER' signals and pass along everything else untouched", () => {
+        it("should exlusively track 'CORE_RENDER' signals and pass along everything else untouched", () => {
             const data = { some: "data" };
 
             const notRenderRelated = (next) => (notify) => {
@@ -157,7 +157,7 @@ describe("the Aydin schedule plugin", () => {
                     visit: (expr, props, nodeType, path) => {
                         if (i === 0) {
                             range(Math.random() * 2).forEach(() => {
-                                notify(CORE_RERENDER, ignoredData);
+                                notify(CORE_RENDER, ignoredData);
                             });
 
                             i += 1;
@@ -182,11 +182,11 @@ describe("the Aydin schedule plugin", () => {
                 [CORE_RENDER_FRAME_DONE],
             ]);
             expect(spy.mock.calls).toEqual([
-                [CORE_RERENDER],
+                [CORE_RENDER],
             ]);
 
             // Forcing re-render
-            upstream(CORE_RERENDER);
+            upstream(CORE_RENDER);
 
             expect(received.mock.calls).toEqual([
                 [CORE_RENDER_FRAME_INIT],
@@ -195,8 +195,8 @@ describe("the Aydin schedule plugin", () => {
                 [CORE_RENDER_FRAME_DONE],
             ]);
             expect(spy.mock.calls).toEqual([
-                [CORE_RERENDER],
-                [CORE_RERENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
             ]);
         });
 
@@ -339,16 +339,16 @@ describe("the Aydin schedule plugin", () => {
             it("should de-duplicate re-render signals in the time slice buffer", (done) => {
                 const fn = jest.fn();
                 const schedule = scheduler(fn);
-                schedule(CORE_RERENDER);
+                schedule(CORE_RENDER);
                 schedule("katara");
-                schedule(CORE_RERENDER);
+                schedule(CORE_RENDER);
 
                 expect(fn.mock.calls).toEqual([]);
 
                 window.requestAnimationFrame(() => {
                     expect(fn.mock.calls).toEqual([
                         ["katara"],
-                        [CORE_RERENDER],
+                        [CORE_RENDER],
                     ]);
                     done();
                 }, 50);
