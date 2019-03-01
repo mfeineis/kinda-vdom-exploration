@@ -156,8 +156,11 @@
             return state.count;
         })(function (count) {
             return ["button", {
+                data: {
+                    count: count,
+                },
                 onClick: ["INC", 1],
-                onMouseDown: () => ["INC", -2]
+                onMouseDown: function () { return ["INC", -2]; },
             }, "+", "(" + count + ")"];
         });
         const tmpl = AydinPluginMvu.connect(function (state) {

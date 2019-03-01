@@ -8,6 +8,8 @@ const isFunction = utils.isFunction;
 const isObject = utils.isObject;
 const noop = utils.noop;
 
+const undefined = void 0;
+
 const configureSink = (upstreamSpy, forward = noop) => (next) => (notify) => {
     const decoratee = next((...args) => {
         upstreamSpy(...args);
@@ -149,18 +151,26 @@ function makeRoot() {
             const nodeState = {
                 childNodes: [],
                 dataset: Object.create(null),
+                domState: null,
                 listeners: [],
                 propertyNameLookup: new Set(),
                 propertyValues: new Map(),
             };
             const node = Object.freeze({
+                get __aydin_dom_state() {
+                    return nodeState.domState;
+                },
                 get _listeners() {
                     return nodeState.listeners;
                 },
                 get _properties() {
                     const dataProps = [];
                     Object.keys(nodeState.dataset).forEach((key) => {
-                        dataProps.push([`data-${key}`, nodeState.dataset[key]]);
+                        const value = nodeState.dataset[key];
+                        if (value === undefined) {
+                            return;
+                        }
+                        dataProps.push([`data-${key}`, value]);
                     });
                     const props = Array.from(nodeState.propertyNameLookup).map((key) => {
                         return [
@@ -181,6 +191,9 @@ function makeRoot() {
                 get childNodes() {
                     return nodeState.childNodes;
                 },
+                get className() {
+                    return nodeState.propertyValues.get("className");
+                },
                 get dataset() {
                     return nodeState.dataset;
                 },
@@ -190,6 +203,20 @@ function makeRoot() {
             });
             return new Proxy(node, {
                 set(_, key, value) {
+                    if (key === "className" && !value) {
+                        nodeState.propertyNameLookup.delete(key);
+                        return;
+                    }
+                    if (key === "__aydin_dom_state") {
+                        // eslint-disable-next-line immutable/no-mutation
+                        nodeState.domState = value;
+                        return;
+                    }
+                    if (value === undefined) {
+                        nodeState.propertyNameLookup.delete(key);
+                        nodeState.propertyValues.delete(key);
+                        return;
+                    }
                     nodeState.propertyNameLookup.add(key);
                     nodeState.propertyValues.set(key, value);
                 },

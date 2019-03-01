@@ -415,14 +415,34 @@ describe("aydin-dom", () => {
 
         });
 
+        describe("tracking DOM node state between renders", () => {
+
+            it("keep track of internal node state in a well known property on the node", () => {
+                const root = makeRoot();
+                const drive = driver(root);
+
+                Aydin.render(drive, ["b", { x: "y" }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b x=\"y\">Bold!</b>",
+                ]));
+
+                expect(root.childNodes[0].__aydin_dom_state).toEqual({
+                    touched: {
+                        x: 1,
+                    },
+                    touchedData: {},
+                });
+            });
+
+        });
+
         describe("mutating existing expressions", () => {
 
             it("should mutate a simple text node", () => {
                 const root = makeRoot();
                 const drive = driver(root);
-                const expr = "Hello, World!";
 
-                Aydin.render(drive, expr);
+                Aydin.render(drive, "Hello, World!");
                 expect(serialize(root)).toEqual(html([
                     "Hello, World!",
                 ]));
@@ -436,9 +456,8 @@ describe("aydin-dom", () => {
             it("should mutate a simple expression", () => {
                 const root = makeRoot();
                 const drive = driver(root);
-                const expr = ["b", "Hello, World!"];
 
-                Aydin.render(drive, expr);
+                Aydin.render(drive, ["b", "Hello, World!"]);
                 expect(serialize(root)).toEqual(html([
                     "<b>Hello, World!</b>",
                 ]));
@@ -446,6 +465,82 @@ describe("aydin-dom", () => {
                 Aydin.render(drive, ["b", "Hello, Universe!"]);
                 expect(serialize(root)).toEqual(html([
                     "<b>Hello, Universe!</b>",
+                ]));
+            });
+
+            it("should mutate simple props that are already there", () => {
+                const root = makeRoot();
+                const drive = driver(root);
+
+                Aydin.render(drive, ["b", { x: "y" }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b x=\"y\">Bold!</b>",
+                ]));
+
+                Aydin.render(drive, ["b", { x: "z" }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b x=\"z\">Bold!</b>",
+                ]));
+            });
+
+            it("should mutate, remove and add simple props", () => {
+                const root = makeRoot();
+                const drive = driver(root);
+
+                Aydin.render(drive, ["b", { a: "b", x: "y" }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b a=\"b\" x=\"y\">Bold!</b>",
+                ]));
+
+                Aydin.render(drive, ["b", { x: "z", z: "a" }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b x=\"z\" z=\"a\">Bold!</b>",
+                ]));
+
+                Aydin.render(drive, ["b", "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b>Bold!</b>",
+                ]));
+            });
+
+            it("should mutate, remove and add data props", () => {
+                const root = makeRoot();
+                const drive = driver(root);
+
+                // eslint-disable-next-line sort-keys
+                Aydin.render(drive, ["b", { data: { x: "y", a: "b" } }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b data-a=\"b\" data-x=\"y\">Bold!</b>",
+                ]));
+
+                Aydin.render(drive, ["b", { data: { x: "z", z: "a" } }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b data-x=\"z\" data-z=\"a\">Bold!</b>",
+                ]));
+
+                Aydin.render(drive, ["b", "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b>Bold!</b>",
+                ]));
+            });
+
+            it("should mutate, remove and add CSS class related props", () => {
+                const root = makeRoot();
+                const drive = driver(root);
+
+                Aydin.render(drive, ["b", { class: "c a" }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b class=\"a c\">Bold!</b>",
+                ]));
+
+                Aydin.render(drive, ["b", { class: ["a","b"] }, "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b class=\"a b\">Bold!</b>",
+                ]));
+
+                Aydin.render(drive, ["b", "Bold!"]);
+                expect(serialize(root)).toEqual(html([
+                    "<b>Bold!</b>",
                 ]));
             });
 

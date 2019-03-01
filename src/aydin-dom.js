@@ -63,12 +63,58 @@ function driver(root) {
             case ELEMENT_NODE: {
                 const existing = find(root, path);
                 if (existing && existing.nodeType === ELEMENT_NODE) {
+                    /* eslint-disable immutable/no-mutation */
+                    if (existing.className && !props.classList) {
+                        existing.className = "";
+                    }
+
+                    const existingState = existing.__aydin_dom_state;
+                    Object.keys(existing.dataset).forEach(function (name) {
+                        existing.dataset[name] = undefined;
+                        delete existingState.touchedData[name];
+                    });
+
+                    Object.keys(existingState.touched).forEach(function (key) {
+                        if (!props[key]) {
+                            existing[key] = undefined;
+                            delete existingState.touched[key];
+                        }
+                    });
+
+                    Object.keys(props).forEach(function (key) {
+                        const value = props[key];
+
+                        switch (key) {
+                        case "classList": {
+                            // Not using `classList` property because IE11
+                            // doesn't support it for SVG elements
+                            existing.className = value.join(" ");
+                            break;
+                        }
+                        case "data":
+                            Object.keys(value).forEach(function (name) {
+                                existing.dataset[name] = value[name];
+                                existingState.touchedData[name] = 1;
+                            });
+                            break;
+                        default:
+                            existing[key] = value;
+                            existingState.touched[key] = 1;
+                            break;
+                        }
+                    });
+
+                    /* eslint-enable immutable/no-mutation */
                     return function () {
                         return existing;
                     };
                 }
 
                 const node = document.createElement(tag);
+                const state = {
+                    touched: {},
+                    touchedData: {},
+                };
 
                 Object.keys(props).forEach(function (key) {
                     const value = props[key];
@@ -104,14 +150,19 @@ function driver(root) {
                     case "data":
                         Object.keys(value).forEach(function (name) {
                             node.dataset[name] = value[name];
+                            state.touchedData[name] = 1;
                         });
                         break;
                     default:
                         node[key] = value;
+                        state.touched[key] = 1;
                         break;
                     }
                     /* eslint-enable immutable/no-mutation */
                 });
+
+                // eslint-disable-next-line immutable/no-mutation
+                node.__aydin_dom_state = state;
 
                 if (path.length === TOPLEVEL) {
                     root.appendChild(node);

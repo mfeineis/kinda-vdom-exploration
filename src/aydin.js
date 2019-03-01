@@ -67,6 +67,11 @@ function assembleProps(id, classNames, props) {
         delete props.class;
     }
 
+    if (isArray(props.class)) {
+        classList = classList.concat(props.class);
+        delete props.class;
+    }
+
     if (props.className) {
         classList = classList.concat(props.className.split(" "));
         delete props.className;
