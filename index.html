@@ -47,9 +47,9 @@
          baseUrl: "./dist",
      });
 
-     require(["aydin", "aydin-dom", "aydin-dom-server", "aydin-plugin-mvu", "aydin-plugin-schedule", "aydin-request", "aydin-transform-markdown"], function (Aydin, AydinDom, AydinDomServer, AydinPluginMvu, AydinPluginSchedule, request, markdown) {
+     require(["aydin.complete"], function (Aydin) {
 
-     request("http://example.org", null, function () {
+     Aydin.request("http://example.org", null, function () {
          console.log('request', arguments);
      });
 
@@ -59,7 +59,7 @@
 
          const node = document.createElement("div");
          node.id = "sample" + makeSample.count;
-         const code = Aydin.render(AydinDomServer(), data);
+         const code = Aydin.renderToString(data);
          node.innerHTML = "<h2>" + title + "</h2>" +
             "<pre>" + JSON.stringify(data) + "</pre>" +
             "<div class='sample'>" + code + "</div>";
@@ -121,17 +121,17 @@
                     ],
                 ],
             ];
-        Aydin.render(AydinDom(node), expr);
+        Aydin.renderStatic(node, expr);
 
         const pre = document.createElement("pre");
-        pre.innerText = Aydin.render(AydinDomServer(), expr);
+        pre.innerText = Aydin.renderToString(expr);
         node.appendChild(pre);
 
         document.body.appendChild(node);
      }
 
      makeSample("Using markdown",
-         [markdown, [
+         [Aydin.markdown, [
              "## Some markdown",
              "With a paragraph with a list",
              "* Item one",
@@ -142,8 +142,7 @@
      );
 
      {
-        const schedule = AydinPluginSchedule();
-        const mvu = AydinPluginMvu(function (model, msg) {
+        function update(model, msg) {
             if (!model) {
                 return [{ count: 42, who: "World" }];
             }
@@ -151,8 +150,9 @@
                 count: model.count + msg[1],
                 who: model.who,
             }];
-        });
-        const counter = AydinPluginMvu.connect(function (state) {
+        }
+
+        const counter = Aydin.connect(function (state) {
             return state.count;
         })(function (count) {
             return ["button", {
@@ -163,7 +163,7 @@
                 onMouseDown: function () { return ["INC", -2]; },
             }, "+", "(" + count + ")"];
         });
-        const tmpl = AydinPluginMvu.connect(function (state) {
+        const tmpl = Aydin.connect(function (state) {
             return state.who;
         })(function (who) {
             return ["div", "Hello, " + who + "!", counter];
@@ -171,10 +171,10 @@
 
         const node = document.createElement("div");
 
-        Aydin.render(schedule(mvu(AydinDom(node))), tmpl);
+        Aydin.render(update, node, tmpl);
 
         const pre = document.createElement("pre");
-        pre.innerText = Aydin.render(mvu(AydinDomServer()), tmpl);
+        pre.innerText = Aydin.renderToString(tmpl, update);
         node.appendChild(pre);
 
         document.body.appendChild(node);

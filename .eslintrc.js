@@ -88,6 +88,8 @@ module.exports = {
                 "commonjs": true
             },
             "files": [
+                "flavors/browser.js",
+                "flavors/complete.js",
                 "src/aydin.js",
                 "src/aydin-dom.js",
                 "src/aydin-dom-server.js",

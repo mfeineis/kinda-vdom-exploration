@@ -108,4 +108,33 @@ export default [
             production && terser(terserOptions),
         ],
     },
+    // Flavors
+    {
+        input: "flavors/browser.js",
+        output: {
+            file: "dist/aydin.browser.js",
+            format: "umd",
+            name: "Aydin",
+            sourcemap: true,
+        },
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            production && terser(terserOptions),
+        ],
+    },
+    {
+        input: "flavors/complete.js",
+        output: {
+            file: "dist/aydin.complete.js",
+            format: "umd",
+            name: "Aydin",
+            sourcemap: true,
+        },
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            production && terser(terserOptions),
+        ],
+    },
 ];
