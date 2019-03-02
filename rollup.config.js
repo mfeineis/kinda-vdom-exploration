@@ -1,7 +1,9 @@
+import pkg from "./package.json";
 import commonjs from "rollup-plugin-commonjs";
 import nodeResolve from "rollup-plugin-node-resolve";
 import { terser } from "rollup-plugin-terser";
 
+const release = process.env.AYDIN_BUILD === "release";
 const production = !process.env.ROLLUP_WATCH;
 const terserOptions = {
     ecma: 5,
@@ -9,11 +11,13 @@ const terserOptions = {
     warnings: true,
 };
 
+const buildDir = release ? `dist/${pkg.version}` : "dist/latest";
+
 export default [
     {
         input: "src/aydin.js",
         output: {
-            file: "dist/aydin.js",
+            file: `${buildDir}/aydin.js`,
             format: "umd",
             name: "Aydin",
             sourcemap: true,
@@ -27,7 +31,7 @@ export default [
     {
         input: "src/aydin-dom.js",
         output: {
-            file: "dist/aydin-dom.js",
+            file: `${buildDir}/aydin-dom.js`,
             format: "umd",
             name: "AydinDom",
             sourcemap: true,
@@ -41,7 +45,7 @@ export default [
     {
         input: "src/aydin-dom-server.js",
         output: {
-            file: "dist/aydin-dom-server.js",
+            file: `${buildDir}/aydin-dom-server.js`,
             format: "umd",
             name: "AydinDomServer",
             sourcemap: true,
@@ -55,7 +59,7 @@ export default [
     {
         input: "src/aydin-plugin-mvu.js",
         output: {
-            file: "dist/aydin-plugin-mvu.js",
+            file: `${buildDir}/aydin-plugin-mvu.js`,
             format: "umd",
             name: "AydinPluginMvu",
             sourcemap: true,
@@ -69,7 +73,7 @@ export default [
     {
         input: "src/aydin-plugin-schedule.js",
         output: {
-            file: "dist/aydin-plugin-schedule.js",
+            file: `${buildDir}/aydin-plugin-schedule.js`,
             format: "umd",
             name: "AydinPluginSchedule",
             sourcemap: true,
@@ -83,7 +87,7 @@ export default [
     {
         input: "src/aydin-request.js",
         output: {
-            file: "dist/aydin-request.js",
+            file: `${buildDir}/aydin-request.js`,
             format: "umd",
             name: "AydinRequest",
             sourcemap: true,
@@ -97,7 +101,7 @@ export default [
     {
         input: "src/aydin-transform-markdown.js",
         output: {
-            file: "dist/aydin-transform-markdown.js",
+            file: `${buildDir}/aydin-transform-markdown.js`,
             format: "umd",
             name: "AydinTransformMarkdown",
             sourcemap: true,
@@ -112,7 +116,7 @@ export default [
     {
         input: "flavors/browser.js",
         output: {
-            file: "dist/aydin.browser.js",
+            file: `${buildDir}/aydin.browser.js`,
             format: "umd",
             name: "Aydin",
             sourcemap: true,
@@ -126,7 +130,7 @@ export default [
     {
         input: "flavors/complete.js",
         output: {
-            file: "dist/aydin.complete.js",
+            file: `${buildDir}/aydin.complete.js`,
             format: "umd",
             name: "Aydin",
             sourcemap: true,

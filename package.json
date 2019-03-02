@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
     "lint-staged": "lint-staged",
+    "release": "NODE_ENV=production AYDIN_BUILD=release rollup --config rollup.config.js",
     "slay-mutants": "stryker run",
     "start": "http-server -p 8081 .",
     "test": "jest && npm run jsdoctest",

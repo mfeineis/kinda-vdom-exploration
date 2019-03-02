@@ -1,6 +1,6 @@
 coverage/
 cypress/integration/examples/
-dist/
+dist/latest/
 private/
 reports/
 
