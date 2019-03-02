@@ -296,30 +296,29 @@ describe("aydin-dom", () => {
                 it("should leave a flat collection of expressions alone", () => {
                     const root = makeRoot();
                     const drive = driver(root);
-                    const expr = ["", "Hello, ", "World", ["i", "!"]];
+                    const expr = ["x", "Hello, ", "World", ["i", "!"]];
 
                     Aydin.render(drive, expr);
-                    expect(root.childNodes).toHaveLength(4);
-                    expect(root.childNodes[0].textContent).toBe("");
-                    const hello = root.childNodes[1];
-                    const world = root.childNodes[2];
-                    const stuff = root.childNodes[3];
+                    expect(root.childNodes[0].childNodes).toHaveLength(3);
+                    const hello = root.childNodes[0].childNodes[0];
+                    const world = root.childNodes[0].childNodes[1];
+                    const stuff = root.childNodes[0].childNodes[2];
                     expect(hello.textContent).toBe("Hello, ");
                     expect(world.textContent).toBe("World");
                     expect(stuff.childNodes).toHaveLength(1);
                     expect(serialize(root)).toEqual(html([
-                        "Hello, World<i>!</i>",
+                        "<x>Hello, World<i>!</i></x>",
                     ]));
 
                     Aydin.render(drive, expr);
-                    expect(root.childNodes).toHaveLength(4);
-                    expect(hello).toBe(root.childNodes[1]);
-                    expect(world).toBe(root.childNodes[2]);
-                    expect(stuff).toBe(root.childNodes[3]);
+                    expect(root.childNodes[0].childNodes).toHaveLength(3);
+                    expect(hello).toBe(root.childNodes[0].childNodes[0]);
+                    expect(world).toBe(root.childNodes[0].childNodes[1]);
+                    expect(stuff).toBe(root.childNodes[0].childNodes[2]);
                     expect(stuff.childNodes).toHaveLength(1);
 
                     expect(serialize(root)).toEqual(html([
-                        "Hello, World<i>!</i>",
+                        "<x>Hello, World<i>!</i></x>",
                     ]));
                 });
 

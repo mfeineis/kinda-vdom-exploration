@@ -5,19 +5,6 @@ const TEXT_NODE = 3;
 const DOCUMENT_TYPE_NODE = 10;
 const INVALID_NODE = -100;
 
-const slice = [].slice;
-
-/**
- * @example
- *     dropLast([]) // => []
- *     dropLast([1]) // => []
- *     dropLast([1,2]) // => [1]
- */
-function dropLast(it) {
-    // eslint-disable-next-line no-magic-numbers
-    return slice.call(it, 0, it.length - 1);
-}
-
 function invariant(condition, message) {
     if (!condition) {
         throw new Error("InvariantViolation: " + message);
@@ -143,7 +130,6 @@ exports.TEXT_NODE = TEXT_NODE;
 exports.DOCUMENT_TYPE_NODE = DOCUMENT_TYPE_NODE;
 exports.INVALID_NODE = INVALID_NODE;
 
-exports.dropLast = dropLast;
 exports.invariant = invariant;
 exports.isArray = isArray;
 exports.isFunction = isFunction;

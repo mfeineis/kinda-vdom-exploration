@@ -36,10 +36,6 @@ describe("aydin-dom-server", () => {
             expect(render(["!DOCTYPE html"])).toBe("<!DOCTYPE html>");
         });
 
-        it("should be ok with a leading empty string indicating a collection instead of an element", () => {
-            expect(render(["", "Some text"])).toBe("Some text");
-        });
-
         it("should ensure that empty props do not add unnecessary whitespace in flat collections", () => {
             expect(render([["i", {}], ["b", {}]])).toBe("<i></i><b></b>");
         });

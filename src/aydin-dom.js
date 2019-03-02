@@ -9,10 +9,22 @@ const signals = require("./signals");
 const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
 const DOMDRIVER_HANDLER_RETURNED_DATA = signals.DOMDRIVER_HANDLER_RETURNED_DATA;
 
-const dropLast = utils.dropLast;
 const invariant = utils.invariant;
 const isFunction = utils.isFunction;
 const isSpecialTag = utils.isSpecialTag;
+
+const slice = [].slice;
+
+/**
+ * @example
+ *     dropLast([]) // => []
+ *     dropLast([1]) // => []
+ *     dropLast([1,2]) // => [1]
+ */
+function dropLast(it) {
+    // eslint-disable-next-line no-magic-numbers
+    return slice.call(it, 0, it.length - 1);
+}
 
 function forEachKey(it, fn) {
     return Object.keys(it).forEach(fn);

@@ -75,21 +75,21 @@ describe("the Aydin Model View Update plugin for state management", () => {
             const input = { a: "a", b: "b" };
             const mvu = plugin(() => [input]);
 
-            const fn = ({ a, b } = {}) => ["", a, b];
+            const fn = ({ a, b } = {}) => ["i", a, b];
             const swap = ({ a, b } = {}) => ({ a: b, b: a });
 
             const connected = plugin.connect(swap)(fn);
 
-            expect(fn(input)).toEqual(["", "a", "b"]);
-            expect(connected(input)).toEqual(["", "a", "b"]);
+            expect(fn(input)).toEqual(["i", "a", "b"]);
+            expect(connected(input)).toEqual(["i", "a", "b"]);
 
-            expect(render(identityDriver, [fn, input])).toEqual(["", "a", "b"]);
-            expect(render(identityDriver, connected)).toEqual(["", "", ""]);
-            expect(render(identityDriver, [connected, input])).toEqual(["", "a", "b"]);
+            expect(render(identityDriver, [fn, input])).toEqual(["i", "a", "b"]);
+            expect(render(identityDriver, connected)).toEqual(["i", "", ""]);
+            expect(render(identityDriver, [connected, input])).toEqual(["i", "a", "b"]);
 
-            expect(render(mvu(identityDriver), [fn, input])).toEqual(["", "a", "b"]);
-            expect(render(mvu(identityDriver), connected)).toEqual(["", "b", "a"]);
-            expect(render(mvu(identityDriver), [connected, {}])).toEqual(["", "b", "a"]);
+            expect(render(mvu(identityDriver), [fn, input])).toEqual(["i", "a", "b"]);
+            expect(render(mvu(identityDriver), connected)).toEqual(["i", "b", "a"]);
+            expect(render(mvu(identityDriver), [connected, {}])).toEqual(["i", "b", "a"]);
         });
 
         it("should hand in the whole state if no mapping is given", () => {
@@ -245,29 +245,32 @@ describe("the Aydin Model View Update plugin for state management", () => {
             const B = plugin.connect(({ counterB }) => counterB)(F("B"));
 
             const driver = mvu(identityDriver);
-            const expr = render(driver, ["", A, B]);
+            const expr = render(driver, ["div", A, B]);
 
-            expect(expr).toEqual([
-                "",
-                ["button", { onClick: ["INC", "A"] }, "+", "0"],
-                ["button", { onClick: ["INC", "B"] }, "+", "10"],
-            ]);
+            expect(expr).toEqual(
+                ["div",
+                    ["button", { onClick: ["INC", "A"] }, "+", "0"],
+                    ["button", { onClick: ["INC", "B"] }, "+", "10"],
+                ]
+            );
 
             simulate("click", expr[1], driver);
 
-            expect(render(driver, ["", A, B])).toEqual([
-                "",
-                ["button", { onClick: ["INC", "A"] }, "+", "1"],
-                ["button", { onClick: ["INC", "B"] }, "+", "10"],
-            ]);
+            expect(render(driver, ["div", A, B])).toEqual(
+                ["div",
+                    ["button", { onClick: ["INC", "A"] }, "+", "1"],
+                    ["button", { onClick: ["INC", "B"] }, "+", "10"],
+                ]
+            );
 
             simulate("click", expr[2], driver);
 
-            expect(render(driver, ["", A, B])).toEqual([
-                "",
-                ["button", { onClick: ["INC", "A"] }, "+", "1"],
-                ["button", { onClick: ["INC", "B"] }, "+", "11"],
-            ]);
+            expect(render(driver, ["div", A, B])).toEqual(
+                ["div",
+                    ["button", { onClick: ["INC", "A"] }, "+", "1"],
+                    ["button", { onClick: ["INC", "B"] }, "+", "11"],
+                ]
+            );
         });
 
         it("should support bubbling signals upstream when visiting nodes", () => {
