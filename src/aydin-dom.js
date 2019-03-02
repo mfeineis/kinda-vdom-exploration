@@ -53,6 +53,32 @@ function driver(root) {
             });
         }
 
+        function attachHandler(node, state, props, key, value) {
+            const evt = key.toLocaleLowerCase().replace(/^on/, "");
+            const handler = function (ev) {
+                if (isFunction(value)) {
+                    const data = value(props, ev);
+                    if (data) {
+                        notify(DOMDRIVER_HANDLER_RETURNED_DATA, {
+                            data: data,
+                        });
+                    }
+                    return;
+                }
+                notify(DOMDRIVER_MISSING_HANDLER, {
+                    value: value,
+                });
+            };
+            node.addEventListener(evt, handler);
+            // eslint-disable-next-line immutable/no-mutation
+            state.handlers[evt] = {
+                dispose: function () {
+                    node.removeEventListener(evt, handler);
+                },
+                handler: value,
+            };
+        }
+
         function visit(tag, props, nodeType, path) {
             if (nodeType === INVALID_NODE) {
                 // TODO: Should we really panic on invalid tag names?
@@ -81,8 +107,33 @@ function driver(root) {
                         }
                     });
 
+                    Object.keys(existingState.handlers).forEach(function (key) {
+                        const value = existingState.handlers[key];
+                        if (!props[key]) {
+                            value.dispose();
+                            delete existingState.handlers[key];
+                            return;
+                        }
+                        if (value.handler !== props[key]) {
+                            value.dispose();
+                            delete existingState.handlers[key];
+                            return;
+                        }
+                    });
+
                     Object.keys(props).forEach(function (key) {
                         const value = props[key];
+
+                        if (/^on/.test(key)) {
+                            attachHandler(
+                                existing,
+                                existingState,
+                                props,
+                                key,
+                                value
+                            );
+                            return;
+                        }
 
                         switch (key) {
                         case "classList": {
@@ -112,6 +163,7 @@ function driver(root) {
 
                 const node = document.createElement(tag);
                 const state = {
+                    handlers: {},
                     touched: {},
                     touchedData: {},
                 };
@@ -120,21 +172,7 @@ function driver(root) {
                     const value = props[key];
 
                     if (/^on/.test(key)) {
-                        const evt = key.toLocaleLowerCase().replace(/^on/, "");
-                        node.addEventListener(evt, function (ev) {
-                            if (isFunction(value)) {
-                                const data = value(props, ev);
-                                if (data) {
-                                    notify(DOMDRIVER_HANDLER_RETURNED_DATA, {
-                                        data: data,
-                                    });
-                                }
-                                return;
-                            }
-                            notify(DOMDRIVER_MISSING_HANDLER, {
-                                value: value,
-                            });
-                        });
+                        attachHandler(node, state, props, key, value);
                         return;
                     }
 

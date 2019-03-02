@@ -200,6 +200,12 @@ function makeRoot() {
                 get nodeName() { return shuffleNodeNameCase(nodeName); },
                 get nodeType() { return ELEMENT_NODE; },
                 get ownerDocument() { return ownerDocument; },
+                removeEventListener(name, fn) {
+                    // eslint-disable-next-line immutable/no-mutation
+                    nodeState.listeners = nodeState.listeners.filter((it) => {
+                        return it[1] !== fn;
+                    });
+                },
             });
             return new Proxy(node, {
                 set(_, key, value) {

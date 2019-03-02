@@ -427,6 +427,7 @@ describe("aydin-dom", () => {
                 ]));
 
                 expect(root.childNodes[0].__aydin_dom_state).toEqual({
+                    handlers: {},
                     touched: {
                         x: 1,
                     },
@@ -436,7 +437,7 @@ describe("aydin-dom", () => {
 
         });
 
-        describe("mutating existing expressions", () => {
+        describe("mutating existing expressions in simple cases", () => {
 
             it("should mutate a simple text node", () => {
                 const root = makeRoot();
@@ -542,6 +543,86 @@ describe("aydin-dom", () => {
                 expect(serialize(root)).toEqual(html([
                     "<b>Bold!</b>",
                 ]));
+            });
+
+        });
+
+        describe("mutating existing expressions with handlers", () => {
+
+            it("should leave an unchanged handler alone on subsequent renders", () => {
+                const root = makeRoot();
+
+                const spy = jest.fn();
+                const sink = configureSink(spy);
+
+                const drive = sink(driver(root));
+
+                const onClick = jest.fn(() => ["DATA1"]);
+
+                Aydin.render(drive, ["button", { onClick }]);
+                const button = root.childNodes[FIRST];
+
+                const [ev] = simulate("click", button);
+                expect(onClick.mock.calls[0][1]).toBe(ev);
+
+                Aydin.render(drive, ["button", { onClick }]);
+
+                const [ev2] = simulate("click", button);
+                expect(onClick.mock.calls[1][1]).toBe(ev2);
+
+                expect(spy.mock.calls).toEqual([
+                    [DOMDRIVER_HANDLER_RETURNED_DATA, {
+                        data: ["DATA1"],
+                    }],
+                    [DOMDRIVER_HANDLER_RETURNED_DATA, {
+                        data: ["DATA1"],
+                    }],
+                ]);
+            });
+
+            it("should replace a handler if it has changed", () => {
+                const root = makeRoot();
+
+                const spy = jest.fn();
+                const sink = configureSink(spy);
+
+                const drive = sink(driver(root));
+
+                const onClick1 = jest.fn(() => ["DATA1"]);
+                const onClick2 = jest.fn(() => ["DATA2"]);
+
+                Aydin.render(drive, ["button", { onClick: onClick1 }]);
+                const button = root.childNodes[FIRST];
+
+                const [ev] = simulate("click", button);
+                expect(onClick1.mock.calls[0][1]).toBe(ev);
+
+                Aydin.render(drive, ["button", { onClick: onClick2 }]);
+
+                const [ev2] = simulate("click", button);
+                expect(onClick1.mock.calls).toHaveLength(1);
+                expect(onClick2.mock.calls[0][1]).toBe(ev2);
+
+                expect(spy.mock.calls).toEqual([
+                    [DOMDRIVER_HANDLER_RETURNED_DATA, {
+                        data: ["DATA1"],
+                    }],
+                    [DOMDRIVER_HANDLER_RETURNED_DATA, {
+                        data: ["DATA2"],
+                    }],
+                ]);
+
+                Aydin.render(drive, ["button"]);
+                expect(simulate("click", button)).toHaveLength(0);
+
+                expect(spy.mock.calls).toEqual([
+                    [DOMDRIVER_HANDLER_RETURNED_DATA, {
+                        data: ["DATA1"],
+                    }],
+                    [DOMDRIVER_HANDLER_RETURNED_DATA, {
+                        data: ["DATA2"],
+                    }],
+                ]);
             });
 
         });
