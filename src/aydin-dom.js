@@ -73,7 +73,7 @@ function driver(root) {
             }
             node.addEventListener(evt, handler);
             // eslint-disable-next-line immutable/no-mutation
-            state.handlers[evt] = {
+            state.handlers[key] = {
                 dispose: function () {
                     node.removeEventListener(evt, handler);
                 },
