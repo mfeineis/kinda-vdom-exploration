@@ -14,6 +14,8 @@ const invariant = utils.invariant;
 const isFunction = utils.isFunction;
 const isSpecialTag = utils.isSpecialTag;
 
+const keys = Object.keys;
+
 const TOPLEVEL = 1;
 
 function driver(root) {
@@ -55,7 +57,7 @@ function driver(root) {
 
         function attachHandler(node, state, props, key, value) {
             const evt = key.toLocaleLowerCase().replace(/^on/, "");
-            const handler = function (ev) {
+            function handler(ev) {
                 if (isFunction(value)) {
                     const data = value(props, ev);
                     if (data) {
@@ -68,7 +70,7 @@ function driver(root) {
                 notify(DOMDRIVER_MISSING_HANDLER, {
                     value: value,
                 });
-            };
+            }
             node.addEventListener(evt, handler);
             // eslint-disable-next-line immutable/no-mutation
             state.handlers[evt] = {
@@ -77,6 +79,70 @@ function driver(root) {
                 },
                 handler: value,
             };
+        }
+
+        function patchNode(node, props) {
+            /* eslint-disable immutable/no-mutation */
+            if (node.className && !props.classList) {
+                node.className = "";
+            }
+
+            const state = node.__aydin_dom_state;
+            keys(node.dataset).forEach(function (name) {
+                node.dataset[name] = undefined;
+                delete state.touchedData[name];
+            });
+
+            keys(state.touched).forEach(function (key) {
+                if (!props[key]) {
+                    node[key] = undefined;
+                    delete state.touched[key];
+                }
+            });
+
+            keys(state.handlers).forEach(function (key) {
+                const value = state.handlers[key];
+                if (!props[key]) {
+                    value.dispose();
+                    delete state.handlers[key];
+                    return;
+                }
+                if (value.handler !== props[key]) {
+                    value.dispose();
+                    delete state.handlers[key];
+                    return;
+                }
+            });
+
+            keys(props).forEach(function (key) {
+                const value = props[key];
+
+                const hasThisHandler = key in state.handlers;
+                if (/^on/.test(key) && !hasThisHandler) {
+                    attachHandler(node, state, props, key, value);
+                    return;
+                }
+
+                switch (key) {
+                case "classList": {
+                    // Not using `classList` property because IE11
+                    // doesn't support it for SVG elements
+                    node.className = value.join(" ");
+                    break;
+                }
+                case "data":
+                    keys(value).forEach(function (name) {
+                        node.dataset[name] = value[name];
+                        state.touchedData[name] = 1;
+                    });
+                    break;
+                default:
+                    node[key] = value;
+                    state.touched[key] = 1;
+                    break;
+                }
+            });
+            /* eslint-enable immutable/no-mutation */
         }
 
         function visit(tag, props, nodeType, path) {
@@ -89,73 +155,7 @@ function driver(root) {
             case ELEMENT_NODE: {
                 const existing = find(root, path);
                 if (existing && existing.nodeType === ELEMENT_NODE) {
-                    /* eslint-disable immutable/no-mutation */
-                    if (existing.className && !props.classList) {
-                        existing.className = "";
-                    }
-
-                    const existingState = existing.__aydin_dom_state;
-                    Object.keys(existing.dataset).forEach(function (name) {
-                        existing.dataset[name] = undefined;
-                        delete existingState.touchedData[name];
-                    });
-
-                    Object.keys(existingState.touched).forEach(function (key) {
-                        if (!props[key]) {
-                            existing[key] = undefined;
-                            delete existingState.touched[key];
-                        }
-                    });
-
-                    Object.keys(existingState.handlers).forEach(function (key) {
-                        const value = existingState.handlers[key];
-                        if (!props[key]) {
-                            value.dispose();
-                            delete existingState.handlers[key];
-                            return;
-                        }
-                        if (value.handler !== props[key]) {
-                            value.dispose();
-                            delete existingState.handlers[key];
-                            return;
-                        }
-                    });
-
-                    Object.keys(props).forEach(function (key) {
-                        const value = props[key];
-
-                        if (/^on/.test(key)) {
-                            attachHandler(
-                                existing,
-                                existingState,
-                                props,
-                                key,
-                                value
-                            );
-                            return;
-                        }
-
-                        switch (key) {
-                        case "classList": {
-                            // Not using `classList` property because IE11
-                            // doesn't support it for SVG elements
-                            existing.className = value.join(" ");
-                            break;
-                        }
-                        case "data":
-                            Object.keys(value).forEach(function (name) {
-                                existing.dataset[name] = value[name];
-                                existingState.touchedData[name] = 1;
-                            });
-                            break;
-                        default:
-                            existing[key] = value;
-                            existingState.touched[key] = 1;
-                            break;
-                        }
-                    });
-
-                    /* eslint-enable immutable/no-mutation */
+                    patchNode(existing, props);
                     return function () {
                         return existing;
                     };
@@ -168,7 +168,7 @@ function driver(root) {
                     touchedData: {},
                 };
 
-                Object.keys(props).forEach(function (key) {
+                keys(props).forEach(function (key) {
                     const value = props[key];
 
                     if (/^on/.test(key)) {
@@ -186,7 +186,7 @@ function driver(root) {
                         }
                         break;
                     case "data":
-                        Object.keys(value).forEach(function (name) {
+                        keys(value).forEach(function (name) {
                             node.dataset[name] = value[name];
                             state.touchedData[name] = 1;
                         });
