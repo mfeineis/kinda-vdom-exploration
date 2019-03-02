@@ -15,6 +15,8 @@ const isSpecialTag = utils.isSpecialTag;
 
 const slice = [].slice;
 
+const TOUCHED = 1;
+
 /**
  * @example
  *     dropLast([]) // => []
@@ -147,12 +149,12 @@ function driver(root) {
                 case "data":
                     forEachKey(value, function (name) {
                         node.dataset[name] = value[name];
-                        state.touchedData[name] = 1;
+                        state.touchedData[name] = TOUCHED;
                     });
                     break;
                 default:
                     node[key] = value;
-                    state.touched[key] = 1;
+                    state.touched[key] = TOUCHED;
                     break;
                 }
             });
@@ -202,12 +204,12 @@ function driver(root) {
                     case "data":
                         forEachKey(value, function (name) {
                             node.dataset[name] = value[name];
-                            state.touchedData[name] = 1;
+                            state.touchedData[name] = TOUCHED;
                         });
                         break;
                     default:
                         node[key] = value;
-                        state.touched[key] = 1;
+                        state.touched[key] = TOUCHED;
                         break;
                     }
                     /* eslint-enable immutable/no-mutation */
