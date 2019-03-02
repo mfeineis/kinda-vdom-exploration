@@ -135,6 +135,50 @@ describe("the Aydin Model View Update plugin for state management", () => {
 
     });
 
+    describe("running intents against the state", () => {
+
+        it("should interpret intents returned from the update function synchronously", () => {
+            const justCat = (put, name) => {
+                put(["gotcat", { isCat: true, name }]);
+            };
+            const purr = (put) => put(["purred"]);
+            const mvu = plugin((model, msg) => {
+                if (!model) {
+                    return [
+                        { hasError: false, isLoading: true },
+                        [justCat, "Chaos"],
+                    ];
+                }
+                switch (msg[0]) {
+                case "gotcat":
+                    return [{ cat: msg[1], isLoading: false }, [purr]];
+                case "gotcat/err":
+                    return [{ cat: null, hasError: true, isLoading: false }];
+                case "purred":
+                    return [{ ...model, cat: { ...model.cat, hasPurred: true } }];
+                default:
+                    return [model];
+                }
+            });
+
+            const tmpl = ({ hasPurred, isCat, name }) => [
+                ["b",
+                    `Hey ${name}! Are you a kitty? - ${isCat ? "yepp" : "no" }`,
+                    `Did you purr? ${hasPurred ? "yepp" : "no"}`,
+                ],
+            ];
+            const connected = plugin.connect(({ cat = {} }) => cat)(tmpl);
+            const driver = mvu(identityDriver);
+            expect(render(driver, connected)).toEqual([
+                ["b",
+                    "Hey Chaos! Are you a kitty? - yepp",
+                    "Did you purr? yepp",
+                ],
+            ]);
+        });
+
+    });
+
     describe("simulating interactions", () => {
 
         it("should update only on suitable interactions", () => {

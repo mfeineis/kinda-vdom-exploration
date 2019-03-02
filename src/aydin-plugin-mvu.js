@@ -3,9 +3,23 @@ const CORE_RENDER = signals.CORE_RENDER;
 const DOMDRIVER_HANDLER_RETURNED_DATA = signals.DOMDRIVER_HANDLER_RETURNED_DATA;
 const DOMDRIVER_MISSING_HANDLER = signals.DOMDRIVER_MISSING_HANDLER;
 
+const slice = [].slice;
+
 const GET_EXPANDO = "__aydin_plugin_mvu_get";
 
 const FIRST = 0;
+const SECOND = 1;
+const ONE = 1;
+
+/**
+ * @example
+ *     dropFirst([]) // => []
+ *     dropFirst([1]) // => []
+ *     dropFirst([1,2]) // => [2]
+ */
+function dropFirst(items) {
+    return slice.call(items, SECOND);
+}
 
 function identity(it) {
     return it;
@@ -20,19 +34,41 @@ function plugin(update) {
     // eslint-disable-next-line immutable/no-let
     let model = init[FIRST];
 
-    function dispatch(msgs) {
+    function dispatch(msgs, initIntents) {
         // eslint-disable-next-line immutable/no-let
         let newModel = model;
 
-        msgs.forEach(function (msg) {
+        function put(msg) {
+            msgs.push(msg);
+        }
+
+        (initIntents || []).forEach(function (intent) {
+            const args = [put].concat(dropFirst(intent));
+            intent[FIRST].apply(null, args);
+        });
+
+        // eslint-disable-next-line immutable/no-let
+        let i = 0;
+        while (i < msgs.length) {
+            const msg = msgs[i];
             const result = update(newModel, msg);
             newModel = result[FIRST];
-        });
+
+            const newIntents = dropFirst(result);
+            newIntents.forEach(function (intent) {
+                const args = [put].concat(dropFirst(intent));
+                intent[FIRST].apply(null, args);
+            });
+
+            i += ONE;
+        }
 
         const hasChanges = newModel !== model;
         model = newModel;
         return hasChanges;
     }
+
+    dispatch([], dropFirst(init));
 
     function driver(next) {
 
