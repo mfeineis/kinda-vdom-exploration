@@ -14,7 +14,9 @@ const invariant = utils.invariant;
 const isFunction = utils.isFunction;
 const isSpecialTag = utils.isSpecialTag;
 
-const keys = Object.keys;
+function forEachKey(it, fn) {
+    return Object.keys(it).forEach(fn);
+}
 
 const TOPLEVEL = 1;
 
@@ -88,19 +90,19 @@ function driver(root) {
             }
 
             const state = node.__aydin_dom_state;
-            keys(node.dataset).forEach(function (name) {
+            forEachKey(node.dataset, function (name) {
                 node.dataset[name] = undefined;
                 delete state.touchedData[name];
             });
 
-            keys(state.touched).forEach(function (key) {
+            forEachKey(state.touched, function (key) {
                 if (!props[key]) {
                     node[key] = undefined;
                     delete state.touched[key];
                 }
             });
 
-            keys(state.handlers).forEach(function (key) {
+            forEachKey(state.handlers, function (key) {
                 const value = state.handlers[key];
                 if (!props[key]) {
                     value.dispose();
@@ -114,7 +116,7 @@ function driver(root) {
                 }
             });
 
-            keys(props).forEach(function (key) {
+            forEachKey(props, function (key) {
                 const value = props[key];
 
                 const hasThisHandler = key in state.handlers;
@@ -131,7 +133,7 @@ function driver(root) {
                     break;
                 }
                 case "data":
-                    keys(value).forEach(function (name) {
+                    forEachKey(value, function (name) {
                         node.dataset[name] = value[name];
                         state.touchedData[name] = 1;
                     });
@@ -168,7 +170,7 @@ function driver(root) {
                     touchedData: {},
                 };
 
-                keys(props).forEach(function (key) {
+                forEachKey(props, function (key) {
                     const value = props[key];
 
                     if (/^on/.test(key)) {
@@ -186,7 +188,7 @@ function driver(root) {
                         }
                         break;
                     case "data":
-                        keys(value).forEach(function (name) {
+                        forEachKey(value, function (name) {
                             node.dataset[name] = value[name];
                             state.touchedData[name] = 1;
                         });
