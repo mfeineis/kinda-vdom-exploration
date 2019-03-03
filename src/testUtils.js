@@ -153,6 +153,7 @@ function makeRoot() {
                 dataset: Object.create(null),
                 domState: null,
                 listeners: [],
+                parentNode: null,
                 propertyNameLookup: new Set(),
                 propertyValues: new Map(),
             };
@@ -186,6 +187,8 @@ function makeRoot() {
                     nodeState.listeners.push([name, fn]);
                 },
                 appendChild(child) {
+                    // eslint-disable-next-line immutable/no-mutation
+                    child._parentNode = node;
                     nodeState.childNodes.push(child);
                 },
                 get childNodes() {
@@ -200,6 +203,7 @@ function makeRoot() {
                 get nodeName() { return shuffleNodeNameCase(nodeName); },
                 get nodeType() { return ELEMENT_NODE; },
                 get ownerDocument() { return ownerDocument; },
+                get parentNode() { return nodeState.parentNode; },
                 removeEventListener(name, fn) {
                     // eslint-disable-next-line immutable/no-mutation
                     nodeState.listeners = nodeState.listeners.filter((it) => {
@@ -216,6 +220,11 @@ function makeRoot() {
                     if (key === "__aydin_dom_state") {
                         // eslint-disable-next-line immutable/no-mutation
                         nodeState.domState = value;
+                        return;
+                    }
+                    if (key === "_parentNode") {
+                        // eslint-disable-next-line immutable/no-mutation
+                        nodeState.parentNode = value;
                         return;
                     }
                     if (value === undefined) {
@@ -239,18 +248,27 @@ function makeRoot() {
     const rootState = {
         childNodes: [],
     };
-    return {
+    const rootNode = {
         get _serializedHTML() {
             return walk(null, rootState.childNodes);
         },
         appendChild: (node) => {
+            // eslint-disable-next-line immutable/no-mutation
+            node._parentNode = rootNode;
             rootState.childNodes.push(node);
         },
         get childNodes() {
             return rootState.childNodes;
         },
         ownerDocument,
+        removeChild(child) {
+            // eslint-disable-next-line immutable/no-mutation
+            rootState.childNodes = rootState.childNodes.filter((node) => {
+                return node !== child;
+            });
+        },
     };
+    return rootNode;
 }
 
 /**

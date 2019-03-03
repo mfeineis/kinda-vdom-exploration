@@ -427,6 +427,7 @@ describe("aydin-dom", () => {
 
                 expect(root.childNodes[0].__aydin_dom_state).toEqual({
                     handlers: {},
+                    path: [0],
                     touched: {
                         x: 1,
                     },
@@ -622,6 +623,57 @@ describe("aydin-dom", () => {
                         data: ["DATA2"],
                     }],
                 ]);
+            });
+
+        });
+
+        describe("mutating expressions in complex cases", () => {
+
+            describe("detecting removed expressions", () => {
+
+                it("should be able to remove leading nodes in obvious cases", () => {
+                    const root = makeRoot();
+
+                    const spy = jest.fn();
+                    const sink = configureSink(spy);
+                    const trace = [];
+                    const drive = sink(tracable(driver(root), trace));
+
+                    Aydin.render(drive, [
+                        ["a"],
+                        ["b"],
+                        ["c"],
+                    ]);
+                    const c = root.childNodes[0].childNodes[2];
+                    expect(trace).toEqual([
+                        "0000: [0] ELEMENT_NODE(1) <a>",
+                        "0001: [1] ELEMENT_NODE(1) <b>",
+                        "0002: [2] ELEMENT_NODE(1) <c>",
+                    ]);
+                    expect(serialize(root)).toEqual(html([
+                        "<a></a>",
+                        "<b></b>",
+                        "<c></c>",
+                    ]));
+
+                    const getNodeState = (node) => node.__aydin_dom_state;
+
+                    Aydin.render(drive, [
+                        ["c"],
+                    ]);
+                    expect(root.childNodes[0].childNodes[0]).toBe(c);
+                    expect(trace).toEqual([
+                        "0000: [0] ELEMENT_NODE(1) <a>",
+                        "0001: [1] ELEMENT_NODE(1) <b>",
+                        "0002: [2] ELEMENT_NODE(1) <c>",
+                        "0003: [0] ELEMENT_NODE(1) <c>",
+                    ]);
+                    expect(serialize(root)).toEqual(html([
+                        "<c></c>",
+                    ]));
+                    expect(getNodeState(root.childNodes[0]).path).toEqual([0]);
+                });
+
             });
 
         });

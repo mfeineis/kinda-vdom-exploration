@@ -13,19 +13,15 @@ const invariant = utils.invariant;
 const isFunction = utils.isFunction;
 const isSpecialTag = utils.isSpecialTag;
 
-const slice = [].slice;
-
 const TOUCHED = 1;
 
 /**
  * @example
- *     dropLast([]) // => []
- *     dropLast([1]) // => []
- *     dropLast([1,2]) // => [1]
+ *     nodeNameEquals("div", "DIV") // => true
+ *     nodeNameEquals("DiV", "dIv") // => true
  */
-function dropLast(it) {
-    // eslint-disable-next-line no-magic-numbers
-    return slice.call(it, 0, it.length - 1);
+function nodeNameEquals(a, b) {
+    return a.toLowerCase() === b.toLowerCase();
 }
 
 function forEachKey(it, fn) {
@@ -60,15 +56,7 @@ function driver(root) {
             /* eslint-enable immutable/no-let, no-magic-numbers */
         }
 
-        function reduce(children, path) {
-            const parent = find(root, dropLast(path));
-
-            children.forEach(function (child, i) {
-                const existing = find(parent, [i]);
-                if (!existing) {
-                    parent.appendChild(child);
-                }
-            });
+        function reduce() {
         }
 
         function attachHandler(node, state, props, key, value) {
@@ -97,13 +85,16 @@ function driver(root) {
             };
         }
 
-        function patchNode(node, props) {
+        function patchNode(node, props, path) {
+            //console.log("patchNode", node.nodeName, node.__aydin_dom_state);
             /* eslint-disable immutable/no-mutation */
             if (node.className && !props.classList) {
                 node.className = "";
             }
 
             const state = node.__aydin_dom_state;
+            state.path = path;
+
             forEachKey(node.dataset, function (name) {
                 node.dataset[name] = undefined;
                 delete state.touchedData[name];
@@ -161,6 +152,11 @@ function driver(root) {
             /* eslint-enable immutable/no-mutation */
         }
 
+        function removeNode(node) {
+            //console.warn("removeNode", node.nodeName);
+            node.parentNode.removeChild(node);
+        }
+
         function visit(tag, props, nodeType, path) {
             if (nodeType === INVALID_NODE) {
                 // TODO: Should we really panic on invalid tag names?
@@ -169,9 +165,31 @@ function driver(root) {
 
             switch (nodeType) {
             case ELEMENT_NODE: {
-                const existing = find(root, path);
+                /* eslint-disable immutable/no-let */
+                let existing = find(root, path);
+                let check = Boolean(existing);
+                /* eslint-enable immutable/no-let */
+
+                while (check) {
+                    check = false;
+                    if (existing && existing.nodeName) {
+                        if (!nodeNameEquals(tag, existing.nodeName)) {
+                            //console.warn("dom.visit existing",
+                            //tag, "!==", existing.nodeName);
+                            //console.warn("> DOM:", existing.
+                            //__aydin_dom_state.path, "expr:", path);
+                            removeNode(existing);
+
+                            const next = find(root, path);
+                            //console.log("> next node", next && next.nodeName);
+                            existing = next;
+                            check = true;
+                            continue;
+                        }
+                    }
+                }
                 if (existing && existing.nodeType === ELEMENT_NODE) {
-                    patchNode(existing, props);
+                    patchNode(existing, props, path);
                     return function () {
                         return existing;
                     };
@@ -180,6 +198,7 @@ function driver(root) {
                 const node = document.createElement(tag);
                 const state = {
                     handlers: {},
+                    path: path,
                     touched: {},
                     touchedData: {},
                 };
