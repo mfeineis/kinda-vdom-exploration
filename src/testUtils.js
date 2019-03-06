@@ -34,6 +34,8 @@ const identityDriver = () => Object.freeze({
             return (children) => [expr, ...children];
         case 3:
             return expr;
+        default:
+            return expr;
         }
     },
 });
@@ -55,6 +57,11 @@ const tracable = (next, trace) => (notify) => {
             case 3:
                 trace.push(
                     `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] TEXT_NODE(${nodeType}) '${expr}'`
+                );
+                break;
+            case 100:
+                trace.push(
+                    `${String(trace.length).padStart(4, "0")}: [${path.join(",")}] COLLECTION_END(${nodeType}) <${expr}>`
                 );
                 break;
             }

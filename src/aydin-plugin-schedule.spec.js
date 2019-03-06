@@ -76,6 +76,12 @@ describe("the Aydin schedule plugin", () => {
                 [CORE_RENDER],
                 [CORE_RENDER],
                 [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
+                [CORE_RENDER],
             ]);
         });
 
@@ -128,6 +134,8 @@ describe("the Aydin schedule plugin", () => {
 
             render(driver, ["i", "Chatty, chatty", "but not rerendery"]);
             expect(spy.mock.calls).toEqual([
+                [-1, data],
+                [-1, data],
                 [-1, data],
                 [-1, data],
                 [-1, data],

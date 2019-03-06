@@ -1,5 +1,6 @@
 const utils = require("./utils");
 
+const COLLECTION_END = utils.COLLECTION_END;
 const DOCUMENT_TYPE_NODE = utils.DOCUMENT_TYPE_NODE;
 const ELEMENT_NODE = utils.ELEMENT_NODE;
 const INVALID_NODE = utils.INVALID_NODE;
@@ -102,6 +103,10 @@ function driver() {
             if (nodeType === INVALID_NODE) {
                 // TODO: Should we really panic on invalid tag names?
                 throw new Error("Invalid tag name \"" + tag + "\"");
+            }
+
+            if (nodeType === COLLECTION_END) {
+                return "";
             }
 
             if (nodeType === TEXT_NODE) {

@@ -6,6 +6,7 @@ const CORE_RENDER_FRAME_INIT = signals.CORE_RENDER_FRAME_INIT;
 const utils = require("./utils");
 
 const DOCUMENT_TYPE_NODE = utils.DOCUMENT_TYPE_NODE;
+const COLLECTION_END = utils.COLLECTION_END;
 const ELEMENT_NODE = utils.ELEMENT_NODE;
 const TEXT_NODE = utils.TEXT_NODE;
 
@@ -186,10 +187,15 @@ function configureRenderer() {
         const finalize = driver.visit(tag, props, ELEMENT_NODE, path);
 
         if (isFunction(finalize)) {
+            // eslint-disable-next-line immutable/no-let
+            let lastPath = path;
             //console.log("core.finalize()", path, children);
-            return finalize(children.map(function (it, i) {
-                return traverse(driver, it, path.concat([i]));
+            const collection = finalize(children.map(function (it, i) {
+                lastPath = path.concat([i]);
+                return traverse(driver, it, lastPath);
             }));
+            driver.visit("/", null, COLLECTION_END, lastPath);
+            return collection;
         }
 
         return finalize;
@@ -212,6 +218,7 @@ function configureRenderer() {
             if (signal === CORE_RENDER) {
                 (composite.receive || noop)(CORE_RENDER_FRAME_INIT);
                 const result = traverse(composite, expr, [FIRST]);
+                composite.visit("/", null, COLLECTION_END, []);
                 (composite.receive || noop)(CORE_RENDER_FRAME_DONE);
                 return result;
             }

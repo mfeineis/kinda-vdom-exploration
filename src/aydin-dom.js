@@ -1,5 +1,6 @@
 const utils = require("./utils");
 
+const COLLECTION_END = utils.COLLECTION_END;
 const DOCUMENT_TYPE_NODE = utils.DOCUMENT_TYPE_NODE;
 const ELEMENT_NODE = utils.ELEMENT_NODE;
 const INVALID_NODE = utils.INVALID_NODE;

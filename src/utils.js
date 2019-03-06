@@ -3,6 +3,7 @@
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 const DOCUMENT_TYPE_NODE = 10;
+const COLLECTION_END = 100;
 const INVALID_NODE = -100;
 
 const slice = [].slice;
@@ -141,6 +142,7 @@ function noop() {}
 exports.ELEMENT_NODE = ELEMENT_NODE;
 exports.TEXT_NODE = TEXT_NODE;
 exports.DOCUMENT_TYPE_NODE = DOCUMENT_TYPE_NODE;
+exports.COLLECTION_END = COLLECTION_END;
 exports.INVALID_NODE = INVALID_NODE;
 
 exports.dropLast = dropLast;

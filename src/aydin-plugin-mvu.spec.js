@@ -332,6 +332,9 @@ describe("the Aydin Model View Update plugin for state management", () => {
                 [CORE_RENDER],
                 [undefined, undefined],
                 [undefined, undefined],
+                [undefined, undefined],
+                [undefined, undefined],
+                [undefined, undefined],
             ]);
 
             simulate("click", expr[1], driver);

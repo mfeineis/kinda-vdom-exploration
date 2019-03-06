@@ -99,8 +99,12 @@ describe("Aydin", () => {
                     "0003: [0,2] ELEMENT_NODE(1) <span>",
                     "0004: [0,2,0] TEXT_NODE(3) 'Three'",
                     "0005: [0,2,1] TEXT_NODE(3) 'Four'",
-                    "0006: [1] ELEMENT_NODE(1) <span>",
-                    "0007: [1,0] TEXT_NODE(3) 'Five'",
+                    "0006: [0,2,1] COLLECTION_END(100) </>",
+                    "0007: [0,2] COLLECTION_END(100) </>",
+                    "0008: [1] ELEMENT_NODE(1) <span>",
+                    "0009: [1,0] TEXT_NODE(3) 'Five'",
+                    "0010: [1,0] COLLECTION_END(100) </>",
+                    "0011: [] COLLECTION_END(100) </>",
                 ]);
 
             });

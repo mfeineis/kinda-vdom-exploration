@@ -140,8 +140,11 @@ describe("aydin-dom", () => {
                     "0002: [0,1] TEXT_NODE(3) 'Two'",
                     "0003: [0,2] ELEMENT_NODE(1) <b>",
                     "0004: [0,2,0] TEXT_NODE(3) 'Bold!'",
-                    "0005: [0,3] TEXT_NODE(3) 'Four'",
-                    "0006: [0,4] TEXT_NODE(3) 'Five'",
+                    "0005: [0,2,0] COLLECTION_END(100) </>",
+                    "0006: [0,3] TEXT_NODE(3) 'Four'",
+                    "0007: [0,4] TEXT_NODE(3) 'Five'",
+                    "0008: [0,4] COLLECTION_END(100) </>",
+                    "0009: [] COLLECTION_END(100) </>",
                 ]);
 
                 expect(serialize(root)).toBe(html([
@@ -647,8 +650,12 @@ describe("aydin-dom", () => {
                     const c = root.childNodes[0].childNodes[2];
                     expect(trace).toEqual([
                         "0000: [0] ELEMENT_NODE(1) <a>",
-                        "0001: [1] ELEMENT_NODE(1) <b>",
-                        "0002: [2] ELEMENT_NODE(1) <c>",
+                        "0001: [0] COLLECTION_END(100) </>",
+                        "0002: [1] ELEMENT_NODE(1) <b>",
+                        "0003: [1] COLLECTION_END(100) </>",
+                        "0004: [2] ELEMENT_NODE(1) <c>",
+                        "0005: [2] COLLECTION_END(100) </>",
+                        "0006: [] COLLECTION_END(100) </>",
                     ]);
                     expect(serialize(root)).toEqual(html([
                         "<a></a>",
@@ -664,9 +671,15 @@ describe("aydin-dom", () => {
                     expect(root.childNodes[0].childNodes[0]).toBe(c);
                     expect(trace).toEqual([
                         "0000: [0] ELEMENT_NODE(1) <a>",
-                        "0001: [1] ELEMENT_NODE(1) <b>",
-                        "0002: [2] ELEMENT_NODE(1) <c>",
-                        "0003: [0] ELEMENT_NODE(1) <c>",
+                        "0001: [0] COLLECTION_END(100) </>",
+                        "0002: [1] ELEMENT_NODE(1) <b>",
+                        "0003: [1] COLLECTION_END(100) </>",
+                        "0004: [2] ELEMENT_NODE(1) <c>",
+                        "0005: [2] COLLECTION_END(100) </>",
+                        "0006: [] COLLECTION_END(100) </>",
+                        "0007: [0] ELEMENT_NODE(1) <c>",
+                        "0008: [0] COLLECTION_END(100) </>",
+                        "0009: [] COLLECTION_END(100) </>",
                     ]);
                     expect(serialize(root)).toEqual(html([
                         "<c></c>",
